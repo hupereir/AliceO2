@@ -2,12 +2,12 @@
 
 #
 # very simple helper script to create the commands for starting several processes
-# inspired from devices/aliceHLTwrapper/launchSimpleChain.sh from Matthias Richter
+# inspired from devices/aliceHLTWrapperApp/launchSimpleChain.sh from Matthias Richter
 #
 # toto
 
 # 932 MB events
-inputDigitsFile="/Users/laurent/o2/clustering/basicTiming/169099/MB/merged.digits.MB.196099.root" 
+inputDigitsFile="/data/merged.digits.MB.196099.root" 
 run=169099
 
 msgSize=10
@@ -40,20 +40,20 @@ screen -S "$sessiontitle" -p 0 -X stuff $"${parameters}$(printf \\r)"
 
 spec=0x0
 sessiontitle="MUONDigitReader_0"
-command="aliceHLTwrapper $sessiontitle 1 --output type=push,size=$msgSize,method=bind,address=tcp://*:$socketNo --library libAliHLTMUON.so --component MUONDigitReader --parameter '-datafile $inputDigitsFile'"
+command="aliceHLTWrapperApp $sessiontitle 1 --output type=push,size=$msgSize,method=bind,address=tcp://*:$socketNo --library libAliHLTMUON.so --component MUONDigitReader --parameter '-datafile $inputDigitsFile'"
 start_device MUONDigitReader
 
 outSocket=$((socketNo + 1))
 
 sessiontitle="MUONPreclusterFinder_0"
-command="aliceHLTwrapper $sessiontitle 1 --input type=pull,method=connect,size=$msgSize,address=tcp://localhost:$socketNo --output type=push,method=connect,size=$msgSize,address=tcp://localhost:$outSocket --library libAliHLTMUON.so --component MUONPreclusterFinder --parameter '-cdbpath local://$ALICE_ROOT/OCDB -run $run'"
+command="aliceHLTWrapperApp $sessiontitle 1 --input type=pull,method=connect,size=$msgSize,address=tcp://localhost:$socketNo --output type=push,method=connect,size=$msgSize,address=tcp://localhost:$outSocket --library libAliHLTMUON.so --component MUONPreclusterFinder --parameter '-cdbpath local://$ALICE_ROOT/OCDB -run $run'"
 start_device MUONPreclusterFinder
 
 echo
 screen -ls
 
 sessiontitle="MUONClusterWriter"
-command="aliceHLTwrapper $sessiontitle 1 --input type=pull,method=bind,size=$msgSize,address=tcp://*:$outSocket --library libAliHLTMUON.so --component MUONClusterWriter --parameter '-datafile MUON.RecPoints.root'"
+command="aliceHLTWrapperApp $sessiontitle 1 --input type=pull,method=bind,size=$msgSize,address=tcp://*:$outSocket --library libAliHLTMUON.so --component MUONClusterWriter --parameter '-datafile MUON.RecPoints.root'"
 
 echo $command
 #start_device MUONPreclusterFinder

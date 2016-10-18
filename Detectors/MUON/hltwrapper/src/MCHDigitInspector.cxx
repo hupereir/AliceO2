@@ -6,20 +6,16 @@
 #include <cassert>
 
 using namespace std;
-using namespace AliceO2::Muon;
+using namespace AliceO2::MUON;
 
 namespace {
 
-  int a;
-  
   void hexdump(uint8_t* data, uint32_t size)
   {
     uint32_t offset(0);
     uint32_t offset2(0);
 
     for (uint32_t i = 0; i < size; i += 16) {
-
-      unsigned int a = -1.0f;
 
       printf("  ");
 

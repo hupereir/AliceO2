@@ -497,3 +497,13 @@ o2_define_bucket(
     ${CMAKE_SOURCE_DIR}/Detectors/Base/include
 )
 
+o2_define_bucket(
+    NAME
+    muon_hltwrapper_bucket
+
+    DEPENDENCIES
+    common_boost_bucket
+    ${Boost_SYSTEM_LIBRARY}
+    ${Boost_PROGRAM_OPTIONS_LIBRARY}
+    fairroot_base_bucket
+)

@@ -48,9 +48,9 @@ int main(int argc, char* argv[])
     cerr << "Exception of unknown type!\n";
   }
 
-  AliceO2::Muon::MCHDigitInspector inspector;
+  AliceO2::MUON::MCHDigitInspector inspector;
 
-  FairMQChannel inputChannel("sub","connect",source);
+  FairMQChannel inputChannel("pull","connect",source);
 
   inspector.SetTransport("zeromq");
 

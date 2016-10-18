@@ -6,7 +6,7 @@
 #include "FairMQDevice.h"
 
 namespace AliceO2 {
-namespace Muon {
+namespace MUON {
 
 class MCHDigitInspector : public FairMQDevice {
 public:
