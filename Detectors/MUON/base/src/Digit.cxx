@@ -1,0 +1,1 @@
+#include <MUONBase/Digit.h>

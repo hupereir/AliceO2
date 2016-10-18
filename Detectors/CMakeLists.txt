@@ -17,7 +17,7 @@
 add_subdirectory(Base)
 add_subdirectory(Passive)
 add_subdirectory(ITSMFT)
-# add_subdirectory(TPC)
 add_subdirectory(MUON)
+add_subdirectory(TPC)
 
 Install(DIRECTORY Geometry gconfig DESTINATION share/Detectors/)

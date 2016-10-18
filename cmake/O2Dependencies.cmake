@@ -387,6 +387,16 @@ o2_define_bucket(
 
 o2_define_bucket(
     NAME
+    muon_base_bucket
+
+    DEPENDENCIES
+    root_base_bucket
+    fairroot_base_bucket
+    ParBase
+)
+
+o2_define_bucket(
+    NAME
     tpc_simulation_bucket
 
     DEPENDENCIES
@@ -506,4 +516,23 @@ o2_define_bucket(
     ${Boost_SYSTEM_LIBRARY}
     ${Boost_PROGRAM_OPTIONS_LIBRARY}
     fairroot_base_bucket
+)
+
+o2_define_bucket(
+    NAME
+    muon_reconstruction_bucket
+
+    DEPENDENCIES
+    muon_base_bucket
+    CDB
+    MUONbase
+    MUONrec
+    RAWDatarec
+    MUONmapping
+    ${Boost_PROGRAM_OPTIONS_LIBRARY}
+    ${Boost_SYSTEM_LIBRARY}
+
+    INCLUDE_DIRECTORIES
+    ${CMAKE_SOURCE_DIR}/Detectors/MUON/base/include
+    ${ALIROOT}/include
 )
