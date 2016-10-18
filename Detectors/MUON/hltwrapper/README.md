@@ -1,8 +1,13 @@
-# Testing
+# Testing the (HLT) preclustering device
 
-## Interactive mode
+## Preparatory steps (once) 
 
-Interactivity is obtained, for the `aliceHLTWrapper` executable, by using the `-x` option
+In order to avoid having the preclustering component compute its internal mapping all over again each time it is
+started, the mapping must be created once for all, using the `dhlt-generate-binmapfile` executable :
+
+```
+dhlt-generate-binmapfile -cdbpath local://$HOME/alicesw/AliRoot/OCDB -run 0 -binmapfile binmapfile.dat
+```
 
 Get a digit file, e.g. :
 
@@ -10,11 +15,15 @@ Get a digit file, e.g. :
 curl -o merged.digits.MB.196099.root https://cernbox.cern.ch/index.php/s/u5qWkslrDvciLCH/download
 ```
 
-You _must_ set the `ALIHLT_HCDBDIR` to point to a valid OCDB, e.g. :
+You also _must_ set the `ALIHLT_HCDBDIR` to point to a valid OCDB, e.g. :
 
 ```
-export ALIHLT_HCDBDIR=/Users/laurent/o2/o2work/AliRoot/OCDB
+export ALIHLT_HCDBDIR=$HOME/alicesw/AliRoot/OCDB
 ```
+
+## Execution
+
+### Start digit reader
 
 Launch, on one terminal, the Digit Reader
 
@@ -24,6 +33,8 @@ aliceHLTWrapperApp 'DigitReader' 1 -x --output type=push,size=10,method=bind,add
 
 Hit 'r' to run it. Assuming this is the first device you launch, nothing should happen as no other device is asking for the data this one is producing.
 
+### Start precluster finder
+
 Get one (or several) cluster finder(s) running :
 
 ```bash
@@ -32,7 +43,7 @@ aliceHLTWrapperApp 'Cluster Finder' 1 -x --input type=pull,method=connect,size=1
 
 Hit 'r' to run it. That should trigger the start of the Digit Reader in the other terminal.
 
- and display a raw dump of the digits in the current terminal.
+### Misc
 
 Alternatively you can also try to launch the Digit Inspector (in another terminal) :
 
