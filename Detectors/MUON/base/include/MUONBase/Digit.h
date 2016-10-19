@@ -9,6 +9,8 @@
 #ifndef __ALICEO2__MUON__Digit__
 #define __ALICEO2__MUON__Digit__
 
+#include <iostream>
+
 namespace AliceO2
 {
 
@@ -27,6 +29,12 @@ namespace AliceO2
 
       // adc
       unsigned short fADC = 0;
+
+      friend std::ostream& operator << ( std::ostream& out, const Digit& digit )
+      {
+        out << "id: " << digit.fId << " index: " << digit.fIndex << " adc: " << digit.fADC;
+        return out;
+      }
 
     };
 
