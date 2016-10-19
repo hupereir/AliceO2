@@ -39,7 +39,7 @@ DigitSampler::DigitSampler()
 
 //_________________________________________________________________________________________________
 DigitSampler::~DigitSampler()
-{}
+{ delete fRawReader; }
 
 //_________________________________________________________________________________________________
 void DigitSampler::InitTask( void )
@@ -48,8 +48,8 @@ void DigitSampler::InitTask( void )
   LOG(INFO) << "Initializing";
 
   // filename
-  fDatafile = fConfig->GetValue<std::string>( "datafile" );
-  if( fDatafile.empty() )
+  auto dataFile = fConfig->GetValue<std::string>( "datafile" );
+  if( dataFile.empty() )
   {
     LOG(ERROR) << "datafile is not set";
     return;
@@ -94,7 +94,7 @@ void DigitSampler::InitTask( void )
   CreateMapping();
 
   // create raw reader
-  fRawReader = AliRawReader::Create( fDatafile.c_str() );
+  fRawReader = AliRawReader::Create( dataFile.c_str() );
   fEvent = 0;
 
 }
@@ -142,6 +142,7 @@ bool DigitSampler::ConditionalRun( void )
     } catch (const std::bad_alloc&) {
 
       LOG(ERROR) << "Could not allocate buffer space. Cannot decode DDL";
+      continue;
 
     }
 
@@ -155,7 +156,6 @@ bool DigitSampler::ConditionalRun( void )
     }
 
     // create digit array
-    using DigitList = std::vector<Digit>;
     fDigits = new DigitList;
 
     // increment ddl decode buffer to fill digits

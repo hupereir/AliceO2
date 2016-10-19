@@ -527,6 +527,9 @@ o2_define_bucket(
     MUONrec
     RAWDatarec
     MUONmapping
+
+    Core RIO Tree #root
+
     ${Boost_PROGRAM_OPTIONS_LIBRARY}
     ${Boost_SYSTEM_LIBRARY}
 

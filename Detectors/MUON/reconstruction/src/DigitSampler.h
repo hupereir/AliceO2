@@ -82,9 +82,6 @@ namespace AliceO2
       /// raw data decoder
       AliMUONTrackerDDLDecoder<RawDecoderHandler> fRawDecoder;
 
-      /// input file name
-      std::string fDatafile;
-
       /// create raw reader
       AliRawReader* fRawReader = nullptr;
 
@@ -95,7 +92,8 @@ namespace AliceO2
       Bool_t fBadEvent = false;
 
       /// running vector of digits
-      std::vector<Digit>* fDigits = nullptr;
+      using DigitList = std::vector<Digit>;
+      DigitList* fDigits = nullptr;
 
       friend class AliMUONTrackerDDLDecoder<RawDecoderHandler>;
 
