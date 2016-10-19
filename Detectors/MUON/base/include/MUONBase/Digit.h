@@ -17,7 +17,7 @@ namespace AliceO2
 
   namespace MUON
   {
-    class Digit
+    struct Digit
     {
 
       public:
