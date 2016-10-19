@@ -20,6 +20,9 @@
 #include <unordered_map>
 #include <vector>
 
+/// forward declarations
+class AliRawReader;
+
 namespace AliceO2
 {
 
@@ -82,11 +85,17 @@ namespace AliceO2
       /// input file name
       std::string fDatafile;
 
+      /// create raw reader
+      AliRawReader* fRawReader = nullptr;
+
+      /// current event number
+      int fEvent = 0;
+
       /// true if event could not be properly decoded
-      Bool_t fBadEvent;
+      Bool_t fBadEvent = false;
 
       /// running vector of digits
-      std::vector<Digit>* fDigits;
+      std::vector<Digit>* fDigits = nullptr;
 
       friend class AliMUONTrackerDDLDecoder<RawDecoderHandler>;
 

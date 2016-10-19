@@ -9,7 +9,7 @@
 #include <chrono>
 
 #include "MUONBase/Digit.h"
-#include "MUONReconstruction/DigitSampler.h"
+#include "DigitSampler.h"
 
 #include <AliCDBManager.h>
 #include <AliMpDDLStore.h>
@@ -29,9 +29,7 @@
 using namespace AliceO2::MUON;
 
 //_________________________________________________________________________________________________
-DigitSampler::DigitSampler():
-  fBadEvent(kFALSE),
-  fDigits( nullptr )
+DigitSampler::DigitSampler()
 {
 
   // setup parent
@@ -95,6 +93,10 @@ void DigitSampler::InitTask( void )
   // create internal mapping
   CreateMapping();
 
+  // create raw reader
+  fRawReader = AliRawReader::Create( fDatafile.c_str() );
+  fEvent = 0;
+
 }
 
 //_________________________________________________________________________________________________
@@ -103,93 +105,86 @@ bool DigitSampler::ConditionalRun( void )
 
   std::this_thread::sleep_for(std::chrono::seconds(1));
 
-  // create raw reader
-  AliRawReader* rawReader = AliRawReader::Create( fDatafile.c_str() );
-
-  int event = 0;
   int maxDDL = 20;
 
-  while( rawReader->NextEvent() )
+  if( !fRawReader->NextEvent() ) return true;
+
+  std::this_thread::sleep_for(std::chrono::seconds(1));
+
+  ++fEvent;
+  LOG(INFO) << "Processing event " << fEvent;
+
+  // load ddls
+  int ddl = 0;
+  while( ddl < maxDDL )
   {
 
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-
-    ++event;
-    LOG(INFO) << "Processing event" << event;
-
-    // load ddls
-    int ddl = 0;
     while( ddl < maxDDL )
     {
+      fRawReader->Reset();
+      fRawReader->Select("MUONTRK", ddl, ddl);
+      if (fRawReader->ReadHeader()) break;
 
-      while( ddl < maxDDL )
-      {
-        rawReader->Reset();
-        rawReader->Select("MUONTRK", ddl, ddl);
-        if (rawReader->ReadHeader()) break;
+      LOG(WARN) << "Skipping DDL " << ddl+1 << " which does not seem to be there";
 
-        LOG(WARN) << "Skipping DDL " << ddl+1 << " which does not seem to be there";
+      ddl++;
+    }
 
-        ddl++;
-      }
+    // if last ddl was read, go to next event
+    if( ddl >= maxDDL ) break;
 
-      // if last ddl was read, go to next event
-      if( ddl >= maxDDL ) break;
+    // read data size
+    auto dataSize = fRawReader->GetDataSize(); // in bytes
 
-      // read data size
-      auto dataSize = rawReader->GetDataSize(); // in bytes
+    // allocate a buffer with proper size
+    unsigned char* buffer = nullptr;
+    try {
 
-      // allocate a buffer with proper size
-      unsigned char* buffer = nullptr;
-      try {
+      buffer = new unsigned char[dataSize];
 
-        buffer = new unsigned char[dataSize];
+    } catch (const std::bad_alloc&) {
 
-      } catch (const std::bad_alloc&) {
+      LOG(ERROR) << "Could not allocate buffer space. Cannot decode DDL";
 
-        LOG(ERROR) << "Could not allocate buffer space. Cannot decode DDL";
+    }
 
-      }
+    // read
+    if( !fRawReader->ReadNext( buffer, dataSize ) )
+    {
 
-      // read
-      if( !rawReader->ReadNext( buffer, dataSize ) )
-      {
-
-        delete[] buffer;
-        continue;
-
-      }
-
-      // create digit array
-      using DigitList = std::vector<Digit>;
-      fDigits = new DigitList;
-
-      // increment ddl decode buffer to fill digits
-      ++ddl;
-      bool decode = fRawDecoder.Decode( buffer, dataSize );
       delete[] buffer;
+      continue;
 
-      // do nothing if no digits
-      if( fDigits->empty() )
-      {
-        delete fDigits;
-        continue;
-      }
+    }
 
-      // create message and send
-      FairMQMessagePtr msg(
-        NewMessage( &fDigits->at(0), fDigits->size(),
-        [](void* /*data*/, void* object) { delete static_cast<DigitList*>(object); },
-        fDigits));
+    // create digit array
+    using DigitList = std::vector<Digit>;
+    fDigits = new DigitList;
 
-      LOG(INFO) << "Sending " << fDigits->size() << " digits for ddl " << ddl;
+    // increment ddl decode buffer to fill digits
+    ++ddl;
+    bool decode = fRawDecoder.Decode( buffer, dataSize );
+    delete[] buffer;
 
-      if( Send(msg, "data1") < 0 )
-      {
-        // failed to send message. abort
-        return false;
-      }
+    // do nothing if no digits
+    if( fDigits->empty() )
+    {
+      delete fDigits;
+      continue;
+    }
 
+    LOG(INFO) << "Sending " << fDigits->size() << " digits for ddl " << ddl;
+
+    // create message and send
+    FairMQMessagePtr msg(
+      NewMessage( &fDigits->at(0), fDigits->size()*sizeof(Digit),
+      [](void* /*data*/, void* object) { delete static_cast<DigitList*>(object); },
+      fDigits));
+
+    if( Send(msg, "data1") < 0 )
+    {
+      LOG(ERROR) << "Sending failed";
+      return false;
     }
 
   }
@@ -265,6 +260,8 @@ void DigitSampler::RawDecoderHandler::OnData(UInt_t data, bool /*parityError*/)
     digit->fId = padId;
     digit->fIndex = 0;
     digit->fADC = adc;
+
+    LOG(INFO) << "Adding digit " << *digit;
 
   } else {
 
