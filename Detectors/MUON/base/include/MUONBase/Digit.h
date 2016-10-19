@@ -10,6 +10,7 @@
 #define __ALICEO2__MUON__Digit__
 
 #include <iostream>
+#include <cstdint>
 
 namespace AliceO2
 {
@@ -22,13 +23,13 @@ namespace AliceO2
       public:
 
       // unique id
-      unsigned int fId = 0;
+      uint32_t fId = 0;
 
       // index
-      unsigned short fIndex = 0;
+      uint16_t fIndex = 0;
 
       // adc
-      unsigned short fADC = 0;
+      uint16_t fADC = 0;
 
       friend std::ostream& operator << ( std::ostream& out, const Digit& digit )
       {
