@@ -106,10 +106,7 @@ bool DigitSampler::ConditionalRun( void )
   std::this_thread::sleep_for(std::chrono::seconds(1));
 
   int maxDDL = 20;
-
   if( !fRawReader->NextEvent() ) return true;
-
-  std::this_thread::sleep_for(std::chrono::seconds(1));
 
   ++fEvent;
   LOG(INFO) << "Processing event " << fEvent;
