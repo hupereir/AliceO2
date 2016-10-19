@@ -108,7 +108,7 @@ bool DigitSampler2::ConditionalRun( void )
     localDigit->fIndex = 0;
     localDigit->fADC = digit->ADC();
 
-    LOG(INFO) << "Adding " << localDigit;
+    LOG(INFO) << "Adding " << *localDigit;
 
   }
 
