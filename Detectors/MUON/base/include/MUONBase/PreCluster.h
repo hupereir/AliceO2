@@ -42,7 +42,7 @@ namespace AliceO2
       bool Deserialize( void*& buffer, int& size );
 
       /// shortcut for list of digits
-      using List = std::vector<Digit>;
+      using List = std::vector<PreCluster>;
 
       /// streamer
       friend std::ostream& operator << ( std::ostream& out, const PreCluster& precluster );

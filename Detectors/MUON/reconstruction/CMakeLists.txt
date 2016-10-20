@@ -6,6 +6,7 @@ set(SRCS
    src/DigitSampler.cxx
    src/DigitSampler2.cxx
    src/DigitSink.cxx
+   src/PreClusterSink.cxx
 )
 
 Set(LIBRARY_NAME ${MODULE_NAME})
@@ -34,6 +35,13 @@ O2_GENERATE_EXECUTABLE(
 O2_GENERATE_EXECUTABLE(
     EXE_NAME mch-digit-sink
     SOURCES src/runDigitSink.cxx
+    MODULE_LIBRARY_NAME ${LIBRARY_NAME}
+    BUCKET_NAME ${BUCKET_NAME}
+)
+
+O2_GENERATE_EXECUTABLE(
+    EXE_NAME mch-precluster-sink
+    SOURCES src/runPreClusterSink.cxx
     MODULE_LIBRARY_NAME ${LIBRARY_NAME}
     BUCKET_NAME ${BUCKET_NAME}
 )
