@@ -11,6 +11,7 @@
 
 #include <iostream>
 #include <cstdint>
+#include <vector>
 
 namespace AliceO2
 {
@@ -71,6 +72,8 @@ namespace AliceO2
 
       /// adc
       uint16_t fADC = 0;
+
+      using List = std::vector<Digit>;
 
       friend std::ostream& operator << ( std::ostream& out, const Digit& digit )
       {
