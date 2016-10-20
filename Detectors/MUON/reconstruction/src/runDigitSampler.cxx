@@ -27,7 +27,7 @@ int runStateMachine(FairMQDevice& device, FairMQProgOptions& config)
 {
 
   device.SetConfig(config);
-  std::string control = config.GetValue<std::string>("control");
+  auto control = config.GetValue<std::string>("control");
 
   // create output channel
   auto output = config.GetValue<std::string>( "output" );
