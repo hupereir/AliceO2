@@ -32,6 +32,18 @@ namespace AliceO2
       /// digits
       Digit::List fDigits;
 
+      /// size
+      int Size( void ) const;
+
+      /// serialize to buffer
+      bool Serialize( void*& buffer, int& size ) const;
+
+      /// deseriaze from buffer
+      bool Deserialize( void*& buffer, int& size );
+
+      /// shortcut for list of digits
+      using List = std::vector<Digit>;
+
       /// streamer
       friend std::ostream& operator << ( std::ostream& out, const PreCluster& precluster );
 
