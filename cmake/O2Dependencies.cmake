@@ -500,6 +500,10 @@ o2_define_bucket(
 o2_define_bucket(
     NAME
     muon_base_bucket
+
+    DEPENDENCIES
+    fairroot_base_bucket
+    ${Boost_SYSTEM_LIBRARY}
 )
 
 o2_define_bucket(
@@ -520,6 +524,9 @@ o2_define_bucket(
     DEPENDENCIES
     muon_base_bucket
     root_base_bucket
+
+    MUONBase
+
     fairroot_base_bucket
     ParBase
     CDB
