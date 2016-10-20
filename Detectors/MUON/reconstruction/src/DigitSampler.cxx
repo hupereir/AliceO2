@@ -8,7 +8,6 @@
 #include <thread>
 #include <chrono>
 
-#include "MUONBase/Digit.h"
 #include "DigitSampler.h"
 
 #include <AliCDBManager.h>
@@ -156,7 +155,7 @@ bool DigitSampler::ConditionalRun( void )
     }
 
     // create digit array
-    fDigits = new DigitList;
+    fDigits.clear();
 
     // increment ddl decode buffer to fill digits
     ++ddl;
@@ -164,24 +163,15 @@ bool DigitSampler::ConditionalRun( void )
     delete[] buffer;
 
     // do nothing if no digits
-    if( fDigits->empty() )
-    {
-      delete fDigits;
-      continue;
-    }
+    if( fDigits.empty() ) continue;
 
-    LOG(INFO) << "Sending " << fDigits->size() << " digits for ddl " << ddl;
+    LOG(INFO) << "Sending " << fDigits.size() << " digits for ddl " << ddl;
 
     // create message and send
-    FairMQMessagePtr msg(
-      NewMessage( &fDigits->at(0), fDigits->size()*sizeof(Digit),
-      [](void* /*data*/, void* object)
-      {
-        auto digitList( static_cast<DigitList*>( object ) );
-        if( digitList ) LOG(INFO) << "Deleting list with " << digitList->size() << " digits";
-        delete digitList;
-      },
-      fDigits));
+    auto msgBuffer = Serialize( fDigits );
+    FairMQMessagePtr msg( NewMessage(
+      msgBuffer, fDigits.size()*( sizeof( uint32_t ) + 2*sizeof( uint16_t ) ),
+      [](void* data, void* /*object*/) { free( data ); } ) );
 
     if( Send(msg, "data1") < 0 )
     {
@@ -228,9 +218,35 @@ void DigitSampler::CreateMapping()
 //_________________________________________________________________________________________________
 Digit* DigitSampler::AddDigit( void )
 {
-  if( !fDigits ) return nullptr;
-  fDigits->push_back( Digit() );
-  return &fDigits->back();
+  fDigits.push_back( Digit() );
+  return &fDigits.back();
+}
+
+//_________________________________________________________________________________________________
+void* DigitSampler::Serialize( Digit::List digits ) const
+{
+
+  if( digits.empty() ) return nullptr;
+
+  void* first = malloc( digits.size()*( sizeof( uint32_t ) + 2*sizeof( uint16_t ) ) );
+  void* data = first;
+
+  for( auto&& digit:digits )
+  {
+
+    *(reinterpret_cast<uint32_t*>(data)) = digit.fId;
+    data = (reinterpret_cast<uint32_t*>(data)+1);
+
+    *(reinterpret_cast<uint16_t*>(data)) = digit.fIndex;
+    data = (reinterpret_cast<uint16_t*>(data)+1);
+
+    *(reinterpret_cast<uint16_t*>(data)) = digit.fADC;
+    data = (reinterpret_cast<uint16_t*>(data)+1);
+
+  }
+
+  return first;
+
 }
 
 //_________________________________________________________________________________________________

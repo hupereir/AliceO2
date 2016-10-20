@@ -8,7 +8,6 @@
 #include <thread>
 #include <chrono>
 
-#include "MUONBase/Digit.h"
 #include "DigitSampler2.h"
 
 #include <TFile.h>
@@ -82,6 +81,8 @@ bool DigitSampler2::ConditionalRun( void )
 
   LOG(INFO) << "Processing event " << fEvent;
 
+  if( fEvent >= 1 ) return true;
+
   // load digits
   fDigitStore->Clear();
   fInputTree->GetEntry(fEvent);
@@ -89,12 +90,8 @@ bool DigitSampler2::ConditionalRun( void )
 
   if( fDigitStore->GetSize() < 1 ) { return true; }
 
-  // create digit array
-  using DigitList = std::vector<Digit>;
-  fDigits = new DigitList;
-
-  // register digits with positive charge
-  int status(0);
+  // using serializer
+  Digit::List localDigits;
   auto digits = fDigitStore->CreateIterator();
   while( auto digit = static_cast<AliMUONVDigit*>(digits->Next() ) )
   {
@@ -103,34 +100,27 @@ bool DigitSampler2::ConditionalRun( void )
     if( digit->Charge() <= 0 ) continue;
 
     // store
-    auto localDigit = AddDigit();
-    localDigit->fId = digit->GetUniqueID();
-    localDigit->fIndex = 0;
-    localDigit->fADC = digit->ADC();
+    Digit localDigit;
+    localDigit.fId = digit->GetUniqueID();
+    localDigit.fIndex = 0;
+    localDigit.fADC = digit->ADC();
 
-    LOG(INFO) << "Adding " << *localDigit;
+    localDigits.push_back( localDigit );
+
+    LOG(INFO) << "Adding " << localDigit;
 
   }
 
-  // do nothing if there is no digits
-  if( fDigits->empty() )
-  {
-    delete fDigits;
-    return true;
-  }
+  if( localDigits.empty() ) return true;
 
-  LOG(INFO) << "Sending " << fDigits->size() << " digits for event " << fEvent;
+  LOG(INFO) << "Sending " << localDigits.size() << " digits for event " << fEvent;
 
   // create message and send
-  FairMQMessagePtr msg(
-    NewMessage( &fDigits->at(0), fDigits->size()*sizeof(Digit),
-    [](void* /*data*/, void* object)
-    {
-      auto digitList( static_cast<DigitList*>( object ) );
-      if( digitList ) LOG(INFO) << "Deleting list with " << digitList->size() << " digits";
-      delete digitList;
-    },
-    fDigits));
+  void* buffer = Serialize( localDigits );
+  FairMQMessagePtr msg( NewMessage(
+    buffer, localDigits.size()*( sizeof( uint32_t ) + 2*sizeof( uint16_t ) ),
+    [](void* data, void* /*object*/) { free( data ); } ) );
+
 
   if( Send(msg, "data1") < 0 )
   {
@@ -141,10 +131,30 @@ bool DigitSampler2::ConditionalRun( void )
   return true;
 
 }
+
 //_________________________________________________________________________________________________
-Digit* DigitSampler2::AddDigit( void )
+void* DigitSampler2::Serialize( Digit::List digits ) const
 {
-  if( !fDigits ) return nullptr;
-  fDigits->push_back( Digit() );
-  return &fDigits->back();
+
+  if( digits.empty() ) return nullptr;
+
+  void* first = malloc( digits.size()*( sizeof( uint32_t ) + 2*sizeof( uint16_t ) ) );
+  void* data = first;
+
+  for( auto&& digit:digits )
+  {
+
+    *(reinterpret_cast<uint32_t*>(data)) = digit.fId;
+    data = (reinterpret_cast<uint32_t*>(data)+1);
+
+    *(reinterpret_cast<uint16_t*>(data)) = digit.fIndex;
+    data = (reinterpret_cast<uint16_t*>(data)+1);
+
+    *(reinterpret_cast<uint16_t*>(data)) = digit.fADC;
+    data = (reinterpret_cast<uint16_t*>(data)+1);
+
+  }
+
+  return first;
+
 }

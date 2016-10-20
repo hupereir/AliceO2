@@ -9,8 +9,11 @@
 #ifndef __ALICEO2__MUON__DigitSink__
 #define __ALICEO2__MUON__DigitSink__
 
-// from fairMQ
+#include "MUONBase/Digit.h"
+
 #include <FairMQDevice.h>
+
+#include <vector>
 
 namespace AliceO2
 {
@@ -33,6 +36,12 @@ namespace AliceO2
 
       /// running
       bool HandleData(FairMQMessagePtr&, int);
+
+      private:
+
+      /// deserializer
+      Digit::List Deserialize( void*, int ) const;
+
 
     };
 

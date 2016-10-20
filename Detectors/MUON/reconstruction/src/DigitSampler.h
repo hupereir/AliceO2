@@ -9,6 +9,8 @@
 #ifndef __ALICEO2__MUON__DigitSampler__
 #define __ALICEO2__MUON__DigitSampler__
 
+#include "MUONBase/Digit.h"
+
 // from aliroot
 #include <AliMpConstants.h>
 #include <AliMUONTrackerDDLDecoderEventHandler.h>
@@ -18,7 +20,6 @@
 #include <FairMQDevice.h>
 
 #include <unordered_map>
-#include <vector>
 
 /// forward declarations
 class AliRawReader;
@@ -28,9 +29,6 @@ namespace AliceO2
 
   namespace MUON
   {
-
-    /// forward declaration
-    class Digit;
 
     class DigitSampler: public FairMQDevice
     {
@@ -57,6 +55,9 @@ namespace AliceO2
 
       /// add a digit
       Digit* AddDigit( void );
+
+      /// serializer
+      void* Serialize( Digit::List ) const;
 
       /// internal class to interface the raw data decoder
       class RawDecoderHandler : public AliMUONTrackerDDLDecoderEventHandler
@@ -92,8 +93,7 @@ namespace AliceO2
       Bool_t fBadEvent = false;
 
       /// running vector of digits
-      using DigitList = std::vector<Digit>;
-      DigitList* fDigits = nullptr;
+      Digit::List fDigits;
 
       friend class AliMUONTrackerDDLDecoder<RawDecoderHandler>;
 

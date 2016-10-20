@@ -5,7 +5,6 @@
  * @author H. Pereira Da Costa
  */
 
-#include "MUONBase/Digit.h"
 #include "DigitSink.h"
 
 #include <FairMQLogger.h>
@@ -28,13 +27,51 @@ DigitSink::~DigitSink()
 bool DigitSink::HandleData(FairMQMessagePtr& msg, int /*index*/)
 {
 
-  LOG(INFO) << "Recieved message of size " << msg->GetSize() << " number of digits: " << msg->GetSize()/sizeof( Digit );
+  LOG(INFO) << "Recieved message of size " << msg->GetSize();
 
-  const Digit* digits = static_cast<const Digit*>( msg->GetData() );
-  const int nDigits = msg->GetSize()/sizeof( Digit );
-  for( int index = 0; index < nDigits; ++index )
-  { LOG(INFO) << "recieved: " << digits[index]; }
+  // use serializer
+  auto digits = Deserialize( msg->GetData(), msg->GetSize() );
+  for( auto&& digit:digits )
+  { LOG(INFO) << "recieved: " << digit; }
 
   return true;
+
+}
+
+//_________________________________________________________________________________________________
+Digit::List DigitSink::Deserialize( void* data, int size ) const
+{
+
+  Digit::List digits;
+  while( size > 0 )
+  {
+
+    Digit digit;
+    if( size >= sizeof( uint32_t ) )
+    {
+      digit.fId = *( static_cast<uint32_t*>(data) );
+      data = (reinterpret_cast<uint32_t*>(data)+1);
+      size -= sizeof( uint32_t );
+    } else break;
+
+    if( size >= sizeof( uint16_t ) )
+    {
+      digit.fIndex = *( static_cast<uint16_t*>(data) );
+      data = (reinterpret_cast<uint16_t*>(data)+1);
+      size -= sizeof( uint16_t );
+    } else break;
+
+    if( size >= sizeof( uint16_t ) )
+    {
+      digit.fADC = *( static_cast<uint16_t*>(data) );
+      data = (reinterpret_cast<uint16_t*>(data)+1);
+      size -= sizeof( uint16_t );
+    } else break;
+
+    digits.push_back( digit );
+
+  }
+
+  return digits;
 
 }

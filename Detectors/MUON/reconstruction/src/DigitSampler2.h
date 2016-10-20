@@ -9,6 +9,8 @@
 #ifndef __ALICEO2__MUON__DigitSampler2__
 #define __ALICEO2__MUON__DigitSampler2__
 
+#include "MUONBase/Digit.h"
+
 // from fairMQ
 #include <FairMQDevice.h>
 
@@ -25,9 +27,6 @@ namespace AliceO2
 
   namespace MUON
   {
-
-    /// forward declaration
-    class Digit;
 
     class DigitSampler2: public FairMQDevice
     {
@@ -49,8 +48,8 @@ namespace AliceO2
 
       private:
 
-      /// add a digit
-      Digit* AddDigit( void );
+      /// serializer
+      void* Serialize( Digit::List ) const;
 
       /// input file
       TFile* fInputFile = nullptr;
@@ -63,10 +62,6 @@ namespace AliceO2
 
       /// current event number
       int fEvent = 0;
-
-      /// running vector of digits
-      using DigitList = std::vector<Digit>;
-      DigitList* fDigits = nullptr;
 
     };
 
