@@ -124,7 +124,12 @@ bool DigitSampler2::ConditionalRun( void )
   // create message and send
   FairMQMessagePtr msg(
     NewMessage( &fDigits->at(0), fDigits->size()*sizeof(Digit),
-    [](void* /*data*/, void* object) { delete static_cast<DigitList*>(object); },
+    [](void* /*data*/, void* object)
+    {
+      auto digitList( static_cast<DigitList*>( object ) );
+      if( digitList ) LOG(INFO) << "Deleting list with " << digitList->size() << " digits";
+      delete digitList;
+    },
     fDigits));
 
   if( Send(msg, "data1") < 0 )
