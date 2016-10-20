@@ -102,13 +102,10 @@ void DigitSampler::InitTask( void )
 bool DigitSampler::ConditionalRun( void )
 {
 
-  std::this_thread::sleep_for(std::chrono::seconds(1));
-
   int maxDDL = 20;
   if( !fRawReader->NextEvent() ) return true;
 
   ++fEvent;
-  LOG(INFO) << "Processing event " << fEvent;
 
   // load ddls
   int ddl = 0;
@@ -165,12 +162,21 @@ bool DigitSampler::ConditionalRun( void )
     // do nothing if no digits
     if( fDigits.empty() ) continue;
 
-    LOG(INFO) << "Sending " << fDigits.size() << " digits for ddl " << ddl;
+    // info
+    LOG(INFO) << "Sending " << fDigits.size() << " digits for event " << fEvent << " and ddl " << ddl;
 
     // create message and send
+    int size = 0;
+    for( auto&& digit:fDigits)
+    {
+      LOG(INFO) << "Sending " << digit << " for DDL" << ddl;
+      size+=digit.Size();
+    }
+
     auto msgBuffer = Serialize( fDigits );
+
     FairMQMessagePtr msg( NewMessage(
-      msgBuffer, fDigits.size()*( sizeof( uint32_t ) + 2*sizeof( uint16_t ) ),
+      msgBuffer, size,
       [](void* data, void* /*object*/) { free( data ); } ) );
 
     if( Send(msg, "data1") < 0 )
@@ -223,27 +229,19 @@ Digit* DigitSampler::AddDigit( void )
 }
 
 //_________________________________________________________________________________________________
-void* DigitSampler::Serialize( Digit::List digits ) const
+void* DigitSampler::Serialize( const Digit::List& digits ) const
 {
 
   if( digits.empty() ) return nullptr;
 
-  void* first = malloc( digits.size()*( sizeof( uint32_t ) + 2*sizeof( uint16_t ) ) );
-  void* data = first;
+  // compute total size
+  int size = 0;
+  for( auto&& digit:digits ) { size += digit.Size(); }
+  void* first = malloc( size );
+  void* buffer = first;
 
-  for( auto&& digit:digits )
-  {
-
-    *(reinterpret_cast<uint32_t*>(data)) = digit.fId;
-    data = (reinterpret_cast<uint32_t*>(data)+1);
-
-    *(reinterpret_cast<uint16_t*>(data)) = digit.fIndex;
-    data = (reinterpret_cast<uint16_t*>(data)+1);
-
-    *(reinterpret_cast<uint16_t*>(data)) = digit.fADC;
-    data = (reinterpret_cast<uint16_t*>(data)+1);
-
-  }
+  // serialize
+  for( auto&& digit:digits ) digit.Serialize( buffer, size );
 
   return first;
 
@@ -278,8 +276,6 @@ void DigitSampler::RawDecoderHandler::OnData(UInt_t data, bool /*parityError*/)
     digit->fId = padId;
     digit->fIndex = 0;
     digit->fADC = adc;
-
-    LOG(INFO) << "Adding digit " << *digit;
 
   } else {
 

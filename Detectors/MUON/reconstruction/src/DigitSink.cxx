@@ -27,49 +27,29 @@ DigitSink::~DigitSink()
 bool DigitSink::HandleData(FairMQMessagePtr& msg, int /*index*/)
 {
 
-  LOG(INFO) << "Recieved message of size " << msg->GetSize();
-
   // use serializer
   auto digits = Deserialize( msg->GetData(), msg->GetSize() );
-  for( auto&& digit:digits )
-  { LOG(INFO) << "recieved: " << digit; }
+  fEvent++;
+  LOG(INFO) << "Recieving " << digits.size() << " digits for event " << fEvent;
+  // for( auto&& digit:digits )
+  // { LOG(INFO) << "recieved: " << digit; }
 
   return true;
 
 }
 
 //_________________________________________________________________________________________________
-Digit::List DigitSink::Deserialize( void* data, int size ) const
+Digit::List DigitSink::Deserialize( void* buffer, int size ) const
 {
 
   Digit::List digits;
-  while( size > 0 )
+
+  while( true )
   {
 
     Digit digit;
-    if( size >= sizeof( uint32_t ) )
-    {
-      digit.fId = *( static_cast<uint32_t*>(data) );
-      data = (reinterpret_cast<uint32_t*>(data)+1);
-      size -= sizeof( uint32_t );
-    } else break;
-
-    if( size >= sizeof( uint16_t ) )
-    {
-      digit.fIndex = *( static_cast<uint16_t*>(data) );
-      data = (reinterpret_cast<uint16_t*>(data)+1);
-      size -= sizeof( uint16_t );
-    } else break;
-
-    if( size >= sizeof( uint16_t ) )
-    {
-      digit.fADC = *( static_cast<uint16_t*>(data) );
-      data = (reinterpret_cast<uint16_t*>(data)+1);
-      size -= sizeof( uint16_t );
-    } else break;
-
-    digits.push_back( digit );
-
+    if( digit.Deserialize( buffer, size ) ) digits.push_back( digit );
+    else break;
   }
 
   return digits;

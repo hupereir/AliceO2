@@ -42,6 +42,8 @@ namespace AliceO2
       /// deserializer
       Digit::List Deserialize( void*, int ) const;
 
+      /// event
+      int fEvent = 0;
 
     };
 

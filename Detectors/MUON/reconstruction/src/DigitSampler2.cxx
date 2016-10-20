@@ -77,15 +77,9 @@ void DigitSampler2::InitTask( void )
 bool DigitSampler2::ConditionalRun( void )
 {
 
-  std::this_thread::sleep_for(std::chrono::seconds(1));
-
-  LOG(INFO) << "Processing event " << fEvent;
-
-  if( fEvent >= 1 ) return true;
-
   // load digits
   fDigitStore->Clear();
-  fInputTree->GetEntry(fEvent);
+  if( !fInputTree->GetEntry(fEvent) ) return false;
   ++fEvent;
 
   if( fDigitStore->GetSize() < 1 ) { return true; }
@@ -107,7 +101,7 @@ bool DigitSampler2::ConditionalRun( void )
 
     localDigits.push_back( localDigit );
 
-    LOG(INFO) << "Adding " << localDigit;
+    // LOG(INFO) << "Adding " << localDigit;
 
   }
 
@@ -116,9 +110,11 @@ bool DigitSampler2::ConditionalRun( void )
   LOG(INFO) << "Sending " << localDigits.size() << " digits for event " << fEvent;
 
   // create message and send
+  int size = 0;
+  for( auto&& digit:localDigits ) { size += digit.Size(); }
   void* buffer = Serialize( localDigits );
   FairMQMessagePtr msg( NewMessage(
-    buffer, localDigits.size()*( sizeof( uint32_t ) + 2*sizeof( uint16_t ) ),
+    buffer, size,
     [](void* data, void* /*object*/) { free( data ); } ) );
 
 
@@ -133,27 +129,19 @@ bool DigitSampler2::ConditionalRun( void )
 }
 
 //_________________________________________________________________________________________________
-void* DigitSampler2::Serialize( Digit::List digits ) const
+void* DigitSampler2::Serialize( const Digit::List& digits ) const
 {
 
   if( digits.empty() ) return nullptr;
 
-  void* first = malloc( digits.size()*( sizeof( uint32_t ) + 2*sizeof( uint16_t ) ) );
-  void* data = first;
+  // compute total size
+  int size = 0;
+  for( auto&& digit:digits ) { size += digit.Size(); }
+  void* first = malloc( size );
+  void* buffer = first;
 
-  for( auto&& digit:digits )
-  {
-
-    *(reinterpret_cast<uint32_t*>(data)) = digit.fId;
-    data = (reinterpret_cast<uint32_t*>(data)+1);
-
-    *(reinterpret_cast<uint16_t*>(data)) = digit.fIndex;
-    data = (reinterpret_cast<uint16_t*>(data)+1);
-
-    *(reinterpret_cast<uint16_t*>(data)) = digit.fADC;
-    data = (reinterpret_cast<uint16_t*>(data)+1);
-
-  }
+  // serialize
+  for( auto&& digit:digits ) digit.Serialize( buffer, size );
 
   return first;
 

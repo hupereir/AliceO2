@@ -57,7 +57,7 @@ namespace AliceO2
       Digit* AddDigit( void );
 
       /// serializer
-      void* Serialize( Digit::List ) const;
+      void* Serialize( const Digit::List& ) const;
 
       /// internal class to interface the raw data decoder
       class RawDecoderHandler : public AliMUONTrackerDDLDecoderEventHandler

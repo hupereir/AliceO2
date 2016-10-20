@@ -49,7 +49,7 @@ namespace AliceO2
       private:
 
       /// serializer
-      void* Serialize( Digit::List ) const;
+      void* Serialize( const Digit::List& ) const;
 
       /// input file
       TFile* fInputFile = nullptr;
