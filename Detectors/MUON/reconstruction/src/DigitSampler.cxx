@@ -169,7 +169,7 @@ bool DigitSampler::ConditionalRun( void )
     int size = 0;
     for( auto&& digit:fDigits)
     {
-      LOG(INFO) << "Sending " << digit << " for DDL" << ddl;
+      // LOG(INFO) << "Sending " << digit << " for DDL" << ddl;
       size+=digit.Size();
     }
 
