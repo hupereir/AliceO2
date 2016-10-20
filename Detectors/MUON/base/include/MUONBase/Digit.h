@@ -73,6 +73,17 @@ namespace AliceO2
       /// adc
       uint16_t fADC = 0;
 
+      /// size
+      int Size( void ) const
+      { return sizeof( uint32_t ) + 2*sizeof( uint16_t ); }
+
+      /// serialize to buffer
+      bool Serialize( void*& buffer, int& size ) const;
+
+      /// deseriaze from buffer
+      bool Deserialize( void*& buffer, int& size );
+
+      /// shortcut for list of digits
       using List = std::vector<Digit>;
 
       friend std::ostream& operator << ( std::ostream& out, const Digit& digit )
