@@ -28,13 +28,13 @@ bool Digit::Deserialize( void*& buffer, int& size )
 
   if( size < Size() ) return false;
 
-  fId = *( static_cast<uint32_t*>(buffer) );
+  fId = *( reinterpret_cast<uint32_t*>(buffer) );
   buffer = (reinterpret_cast<uint32_t*>(buffer)+1);
 
-  fIndex = *( static_cast<uint16_t*>(buffer) );
+  fIndex = *( reinterpret_cast<uint16_t*>(buffer) );
   buffer = (reinterpret_cast<uint16_t*>(buffer)+1);
 
-  fADC = *( static_cast<uint16_t*>(buffer) );
+  fADC = *( reinterpret_cast<uint16_t*>(buffer) );
   buffer = (reinterpret_cast<uint16_t*>(buffer)+1);
   size -= Size();
 
