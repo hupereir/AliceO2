@@ -1,59 +1,52 @@
 /// \file Digitizer.h
-/// \brief Task for ALICE ITS digitization
-#ifndef ALICEO2_ITS_Digitizer_H_
-#define ALICEO2_ITS_Digitizer_H_
+/// \brief Definition of the ITS digitizer
+#ifndef ALICEO2_ITS_DIGITIZER_H
+#define ALICEO2_ITS_DIGITIZER_H
 
-#include "Rtypes.h"   // for Digitizer::Class, Double_t, ClassDef, etc
-#include "TObject.h"  // for TObject
-#include "ITSSimulation/Chip.h"
+#include <vector>
 
-class TClonesArray;  // lines 13-13
-namespace AliceO2 { namespace ITS { class DigitContainer; }}  // lines 19-19
-namespace AliceO2 { namespace ITS { class UpgradeGeometryTGeo; }}  // lines 20-20
+#include "Rtypes.h"  // for Digitizer::Class, Double_t, ClassDef, etc
+#include "TObject.h" // for TObject
 
-namespace AliceO2 {
+#include "ITSBase/GeometryTGeo.h"
+#include "ITSSimulation/DigitContainer.h"
 
-namespace ITS {
+class TClonesArray;
 
-class DigitContainer;
-
-class UpgradeGeometryTGeo;
-
-class Digitizer : public TObject
+namespace AliceO2
 {
-  public:
-    Digitizer();
+  namespace ITS
+  {
+    class Chip;
+    class SimulationAlpide;
 
-    /// Destructor
-    ~Digitizer();
+    class Digitizer : public TObject
+    {
+    public:
+      Digitizer();
+      ~Digitizer();
 
-    void Init();
+      void init(Bool_t build = kTRUE);
 
-    /// Steer conversion of points to digits
-    /// @param points Container with ITS points
-    /// @return digits container
-    DigitContainer *Process(TClonesArray *points);
+      /// Steer conversion of points to digits
+      /// @param points Container with ITS points
+      /// @return digits container
+      DigitContainer& process(TClonesArray* points);
+      void process(TClonesArray* points, TClonesArray* digits);
 
-    void SetGainFactor(Double_t gain)
-    { fGain = gain; }
+    private:
+      Digitizer(const Digitizer&);
+      Digitizer& operator=(const Digitizer&);
 
-    void ClearChips();
+      GeometryTGeo mGeometry;                     ///< ITS upgrade geometry
+      Int_t mNumOfChips;                          ///< Number of chips
+      std::vector<Chip> mChips;                   ///< Array of chips
+      std::vector<SimulationAlpide> mSimulations; ///< Array of chips response simulations
+      DigitContainer mDigitContainer;             ///< Internal digit storage
 
-  private:
-    Digitizer(const Digitizer &);
-
-    Digitizer &operator=(const Digitizer &);
-
-    std::vector<Chip> fChipContainer;             ///< Container for ITS chip
-
-    DigitContainer *fDigitContainer;           ///< Internal digit storage
-    UpgradeGeometryTGeo *fGeometry;                 ///< ITS upgrade geometry
-
-    Double_t fGain;                      ///< pad gain factor (global for the moment)
-
-  ClassDef(Digitizer, 1);
-};
+      ClassDef(Digitizer, 2);
+    };
+  }
 }
-}
 
-#endif /* ALICEO2_ITS_Digitizer_H_ */
+#endif /* ALICEO2_ITS_DIGITIZER_H */

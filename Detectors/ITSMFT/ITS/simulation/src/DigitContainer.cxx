@@ -1,64 +1,29 @@
-//
-//  DigitContainer.cxx
-//  ALICEO2
-//
-//  Created by Markus Fasel on 25.03.15.
-//
+/// \file DigitContainer.cxx
+/// \brief Implementation of the ITS DigitContainer class
 //
 #include "ITSSimulation/DigitContainer.h"
-#include "ITSSimulation/UpgradeGeometryTGeo.h"
-#include "ITSSimulation/Digit.h"
-#include "ITSSimulation/DigitLayer.h"
+#include "ITSBase/Digit.h"
 
-#include "FairLogger.h"           // for LOG
-#include "Rtypes.h"               // for Int_t, nullptr
+#include "FairLogger.h" // for LOG
 
 using namespace AliceO2::ITS;
 
-DigitContainer::DigitContainer(const UpgradeGeometryTGeo *geo) :
-  fGeometry(geo)
+void DigitContainer::reset()
 {
-  for (Int_t ily = 0; ily < 7; ily++) {
-    fDigitLayer[ily] = new DigitLayer(ily,
-                                      fGeometry->getNumberOfStaves(ily));
-  }
+  for (Int_t i = 0; i < mChips.size(); i++)
+    mChips[i].reset();
 }
 
-DigitContainer::~DigitContainer()
+Digit* DigitContainer::getDigit(Int_t chipID, UShort_t row, UShort_t col) { return mChips[chipID].getDigit(row, col); }
+
+Digit* DigitContainer::addDigit(UShort_t chipID, UShort_t row, UShort_t col, Double_t charge, Double_t timestamp)
 {
-  for (int ily = 0; ily < 7; ily++) { delete fDigitLayer[ily]; }
+  return mChips[chipID].addDigit(chipID, row, col, charge, timestamp);
 }
 
-void DigitContainer::Reset()
+void DigitContainer::fillOutputContainer(TClonesArray* output)
 {
-  for (int ily = 0; ily < 7; ily++) { fDigitLayer[ily]->Reset(); }
-}
-
-Digit *DigitContainer::FindDigit(int layer, int stave, int pixel)
-{
-  if (layer >= 7) {
-    LOG(ERROR) << "Layer index out of range : " << layer << ", max 6" << FairLogger::endl;
-    return nullptr;
-  }
-  return fDigitLayer[layer]->FindDigit(stave, pixel);
-}
-
-void DigitContainer::AddDigit(Digit *digi)
-{
-  Int_t layer = fGeometry->getLayer(digi->GetChipIndex()),
-    stave = fGeometry->getStave(digi->GetChipIndex()),
-    pixel = fGeometry->getChipIdInStave(digi->GetChipIndex());
-
-  if (layer >= 7) {
-    LOG(ERROR) << "Layer index out of range : " << layer << ", max 6" << FairLogger::endl;
-    return;
-  }
-  fDigitLayer[layer]->SetDigit(digi, stave, pixel);
-}
-
-void DigitContainer::FillOutputContainer(TClonesArray *output)
-{
-  for (DigitLayer **layeriter = fDigitLayer; layeriter < fDigitLayer + 7; layeriter++) {
-    (*layeriter)->FillOutputContainer(output);
+  for (Int_t i = 0; i < mChips.size(); i++) {
+    mChips[i].fillOutputContainer(output);
   }
 }

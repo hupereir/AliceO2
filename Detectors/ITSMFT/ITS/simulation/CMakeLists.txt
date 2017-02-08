@@ -3,17 +3,16 @@ set(MODULE_NAME "ITSSimulation")
 O2_SETUP(NAME ${MODULE_NAME})
 
 set(SRCS
-    src/UpgradeGeometryTGeo.cxx
     src/V11Geometry.cxx
-    src/UpgradeV1Layer.cxx
-    src/Segmentation.cxx
-    src/UpgradeSegmentationPixel.cxx
-    src/GeometryManager.cxx
+    src/V1Layer.cxx
     src/Detector.cxx
     src/GeometryHandler.cxx
     src/Point.cxx
     src/Chip.cxx
-    src/Digit.cxx
+    src/ClusterShape.cxx
+    src/SimuClusterShaper.cxx
+    src/SimulationAlpide.cxx
+    src/DigitChip.cxx
     src/Digitizer.cxx
     src/DigitizerTask.cxx
     src/DigitWriteoutBuffer.cxx
@@ -24,7 +23,10 @@ set(SRCS
 set(HEADERS
     include/${MODULE_NAME}/Chip.h
     include/${MODULE_NAME}/Detector.h
-    include/${MODULE_NAME}/Digit.h
+    include/${MODULE_NAME}/ClusterShape.h
+    include/${MODULE_NAME}/SimuClusterShaper.h
+    include/${MODULE_NAME}/SimulationAlpide.h
+    include/${MODULE_NAME}/DigitChip.h
     include/${MODULE_NAME}/DigitContainer.h
     include/${MODULE_NAME}/DigitLayer.h
     include/${MODULE_NAME}/DigitStave.h
@@ -32,12 +34,8 @@ set(HEADERS
     include/${MODULE_NAME}/Digitizer.h
     include/${MODULE_NAME}/DigitizerTask.h
     include/${MODULE_NAME}/GeometryHandler.h
-    include/${MODULE_NAME}/GeometryManager.h
     include/${MODULE_NAME}/Point.h
-    include/${MODULE_NAME}/Segmentation.h
-    include/${MODULE_NAME}/UpgradeGeometryTGeo.h
-    include/${MODULE_NAME}/UpgradeSegmentationPixel.h
-    include/${MODULE_NAME}/UpgradeV1Layer.h
+    include/${MODULE_NAME}/V1Layer.h
     include/${MODULE_NAME}/V11Geometry.h
     )
 

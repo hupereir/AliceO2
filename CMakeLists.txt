@@ -154,9 +154,12 @@ ENDIF (NOT ALICEO2_MODULAR_BUILD)
 
 IF (PYTHIA8_FOUND AND Pythia6_FOUND)
   add_subdirectory(Generators)
+  set(GENERATORS_LIBRARY Generators)
 ENDIF ()
 
-add_subdirectory(CCDB)
+if(ALIROOT)
+  add_subdirectory(CCDB)
+endif(ALIROOT)
 add_subdirectory(Common)
 add_subdirectory(DataFormats)
 add_subdirectory(Detectors)
@@ -166,8 +169,8 @@ add_subdirectory(Utilities)
 
 Option(BUILD_DOXYGEN "Build Doxygen" OFF)
 IF (BUILD_DOXYGEN)
-  MESSAGE(STATUS "*** Building the Doxygen documentaion ***")
-  ADD_SUBDIRECTORY(doxygen)
+  MESSAGE(STATUS "Building the Doxygen documentation")
+  ADD_SUBDIRECTORY(docs)
 ENDIF (BUILD_DOXYGEN)
 
 

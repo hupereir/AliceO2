@@ -1,5 +1,9 @@
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/run/startFLP2EPN-distributed.sh.in ${CMAKE_BINARY_DIR}/bin/startFLP2EPN-distributed.sh)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}//test/testFLP2EPN-distributed.sh.in ${CMAKE_BINARY_DIR}/Examples/flp2epn-distributed/test/testFLP2EPN-distributed.sh)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/test/testFLP2EPN-distributed.sh.in ${CMAKE_BINARY_DIR}/Examples/flp2epn-distributed/test/testFLP2EPN-distributed.sh)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/run/flp2epn-prototype.json ${CMAKE_BINARY_DIR}/bin/config/flp2epn-prototype.json)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/run/flp2epn-prototype-dds.json ${CMAKE_BINARY_DIR}/bin/config/flp2epn-prototype-dds.json)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/run/flp2epn-dds-topology.xml ${CMAKE_BINARY_DIR}/bin/config/flp2epn-dds-topology.xml @ONLY)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/run/flp2epn-dds-hosts.cfg ${CMAKE_BINARY_DIR}/bin/config/flp2epn-dds-hosts.cfg COPYONLY)
 
 set(MODULE_NAME "FLP2EPNex_distributed")
 
@@ -32,29 +36,11 @@ Set(Exe_Names
     epnReceiver
     )
 
-if (DDS_FOUND)
-  set(Exe_Names
-      ${Exe_Names}
-      flpSyncSampler_dds
-      flpSender_dds
-      epnReceiver_dds
-      )
-endif ()
-
 set(Exe_Source
     run/runFLPSyncSampler.cxx
     run/runFLPSender.cxx
     run/runEPNReceiver.cxx
     )
-
-if (DDS_FOUND)
-  set(Exe_Source
-      ${Exe_Source}
-      runO2Prototype/runFLPSyncSampler.cxx
-      runO2Prototype/runFLPSender.cxx
-      runO2Prototype/runEPNReceiver.cxx
-      )
-endif ()
 
 # todo we repeat ourselves because the macro O2_GENERATE_LIBRARY dares deleting the variables we pass to it.
 if (DDS_FOUND)
@@ -81,3 +67,13 @@ EndForEach (_file RANGE 0 ${_length})
 add_test(NAME run_flp2epn_distributed COMMAND ${CMAKE_BINARY_DIR}/Examples/flp2epn-distributed/test/testFLP2EPN-distributed.sh)
 set_tests_properties(run_flp2epn_distributed PROPERTIES TIMEOUT "30")
 set_tests_properties(run_flp2epn_distributed PROPERTIES PASS_REGULAR_EXPRESSION "acknowledged after")
+
+install(FILES ${CMAKE_BINARY_DIR}/bin/startFLP2EPN-distributed.sh
+              ${CMAKE_BINARY_DIR}/Examples/flp2epn-distributed/test/testFLP2EPN-distributed.sh
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+
+install(FILES ${CMAKE_BINARY_DIR}/bin/config/flp2epn-prototype.json
+              ${CMAKE_BINARY_DIR}/bin/config/flp2epn-prototype-dds.json
+              ${CMAKE_BINARY_DIR}/bin/config/flp2epn-dds-topology.xml
+              ${CMAKE_BINARY_DIR}/bin/config/flp2epn-dds-hosts.cfg
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/config)

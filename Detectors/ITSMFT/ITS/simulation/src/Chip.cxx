@@ -11,7 +11,7 @@
 #include <string.h>                   // for memset
 #include "TObjArray.h"                // for TObjArray
 #include "ITSSimulation/Point.h"
-#include "ITSSimulation/UpgradeGeometryTGeo.h"
+#include "ITSBase/GeometryTGeo.h"
 
 ClassImp(AliceO2::ITS::Chip)
 
@@ -26,7 +26,7 @@ Chip::Chip() :
   fPoints.SetOwner(kFALSE);
 }
 
-Chip::Chip(Int_t chipindex, UpgradeGeometryTGeo *geometry) :
+Chip::Chip(Int_t chipindex, GeometryTGeo *geometry) :
   TObject(),
   fChipIndex(chipindex),
   fPoints(),
@@ -101,8 +101,10 @@ void Chip::Clear(Option_t *opt)
   fPoints.Clear();
 }
 
-Bool_t Chip::LineSegmentLocal(Int_t hitindex, Double_t &xstart, Double_t &xpoint, Double_t &ystart, Double_t &ypoint,
-                              Double_t &zstart, Double_t &zpoint, Double_t &timestart, Double_t &eloss) const
+Bool_t Chip::LineSegmentLocal(Int_t hitindex,
+Double_t &xstart, Double_t &xpoint,
+Double_t &ystart, Double_t &ypoint,
+Double_t &zstart, Double_t &zpoint, Double_t &timestart, Double_t &eloss) const
 {
   if (hitindex >= fPoints.GetEntriesFast()) {
     return kFALSE;

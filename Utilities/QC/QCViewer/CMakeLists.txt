@@ -24,10 +24,20 @@ set(BUCKET_NAME QC_viewer_bucket)
 
 # Define application
 O2_GENERATE_EXECUTABLE(
-    EXE_NAME runViewerDevice
+    EXE_NAME runQCViewerDevice
     SOURCES src/runViewerDevice.cxx
     MODULE_LIBRARY_NAME ${LIBRARY_NAME}
     BUCKET_NAME ${BUCKET_NAME}
 )
 
-# TODO add test
+ADD_DEFINITIONS(-DBOOST_TEST_DYN_LINK)
+
+set(TEST_SRCS
+    test/ViewerTestSuite.cxx
+    )
+
+O2_GENERATE_TESTS(
+    MODULE_LIBRARY_NAME ${LIBRARY_NAME}
+    BUCKET_NAME ${BUCKET_NAME}
+    TEST_SRCS ${TEST_SRCS}
+)

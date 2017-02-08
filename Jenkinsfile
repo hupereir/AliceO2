@@ -2,14 +2,21 @@
 
 node {
   stage "Verify author"
-  def power_users = ["ktf",
-                     "dberzano",
-                     "MohammadAlTurany",
-                     "matthiasrichter",
-                     "Barthelemy",
-                     "wiechula",
-                     "bovulpes",
-                     "rbx"]
+  def power_users = [
+    "Barthelemy",
+    "MohammadAlTurany",
+    "PatrykLesiak",
+    "bovulpes",
+    "dberzano",
+    "iouribelikov",
+    "ktf",
+    "matthiasrichter",
+    "mkrzewic",
+    "mpuccio",
+    "rbx",
+    "sawanzel",
+    "wiechula"
+  ]
   echo "Changeset from " + env.CHANGE_AUTHOR
   if (power_users.contains(env.CHANGE_AUTHOR)) {
     currentBuild.displayName = "Testing ${env.BRANCH_NAME} from ${env.CHANGE_AUTHOR}"

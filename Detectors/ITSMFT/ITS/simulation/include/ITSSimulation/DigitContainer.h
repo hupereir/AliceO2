@@ -1,47 +1,38 @@
-//
-//  DigitContainer.h
-//  ALICEO2
-//
-//  Created by Markus Fasel on 25.03.15.
-//
-//
+/// \file DigitContainer.h
+/// \brief Definition of the ITS DigitContainer class
 
-#ifndef _ALICEO2_ITS_DigitContainer_
-#define _ALICEO2_ITS_DigitContainer_
+#ifndef ALICEO2_ITS_DIGITCONTAINER
+#define ALICEO2_ITS_DIGITCONTAINER
 
-class TClonesArray;  // lines 14-14
-namespace AliceO2 { namespace ITS { class Digit; }}  // lines 19-19
-namespace AliceO2 { namespace ITS { class DigitLayer; }}  // lines 20-20
-namespace AliceO2 { namespace ITS { class UpgradeGeometryTGeo; }}
+#include <vector>
 
+#include "ITSSimulation/DigitChip.h"
+#include "Rtypes.h"
 
-namespace AliceO2 {
-namespace ITS {
+class TClonesArray;
 
-class Digit;
-
-class DigitLayer;
-
-class DigitContainer
+namespace AliceO2
 {
-  public:
-    DigitContainer(const UpgradeGeometryTGeo *geo);
+  namespace ITS
+  {
+    class Digit;
 
-    ~DigitContainer();
+    class DigitContainer
+    {
+    public:
+      DigitContainer() {}
+      ~DigitContainer() {}
+      void reset();
+      void resize(Int_t n) { mChips.resize(n); }
+      Digit* addDigit(UShort_t chipid, UShort_t row, UShort_t col, Double_t charge, Double_t timestamp);
+      Digit* getDigit(Int_t chipID, UShort_t row, UShort_t col);
 
-    void Reset();
+      void fillOutputContainer(TClonesArray* output);
 
-    void AddDigit(Digit *digi);
-
-    Digit *FindDigit(int layer, int stave, int index);
-
-    void FillOutputContainer(TClonesArray *output);
-
-  private:
-    DigitLayer *fDigitLayer[7];
-    const UpgradeGeometryTGeo *fGeometry;
-};
+    private:
+      std::vector<DigitChip> mChips; ///< Vector of DigitChips
+    };
+  }
 }
-}
 
-#endif /* defined(__ALICEO2__DigitContainer__) */
+#endif /* ALICEO2_ITS_DIGITCONTAINER */

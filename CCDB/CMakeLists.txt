@@ -2,21 +2,31 @@ set(MODULE_NAME "CCDB")
 
 O2_SETUP(NAME ${MODULE_NAME})
 
+PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS src/request.proto)
+include_directories(${CMAKE_BINARY_DIR}/CCDB)
+
 set(SRCS
-  src/Manager.cxx
+  src/Backend.cxx
+  src/BackendOCDB.cxx
+  src/BackendRiak.cxx
   src/Condition.cxx
-  src/GridStorage.cxx
-  src/LocalStorage.cxx
-  src/FileStorage.cxx
-  src/ConditionMetaData.cxx
   src/ConditionId.cxx
+  src/ConditionMetaData.cxx
+  src/FileStorage.cxx
+  src/GridStorage.cxx
   src/IdPath.cxx
   src/IdRunRange.cxx
+  src/LocalStorage.cxx
+  src/Manager.cxx
+  src/ObjectHandler.cxx
   src/Storage.cxx
   src/XmlHandler.cxx
 )
 
 set(HEADERS
+  include/${MODULE_NAME}/Backend.h
+  include/${MODULE_NAME}/BackendOCDB.h
+  include/${MODULE_NAME}/BackendRiak.h
   include/${MODULE_NAME}/Condition.h
   include/${MODULE_NAME}/ConditionId.h
   include/${MODULE_NAME}/ConditionMetaData.h
@@ -26,6 +36,7 @@ set(HEADERS
   include/${MODULE_NAME}/IdRunRange.h
   include/${MODULE_NAME}/LocalStorage.h
   include/${MODULE_NAME}/Manager.h
+  include/${MODULE_NAME}/ObjectHandler.h
   include/${MODULE_NAME}/Storage.h
   include/${MODULE_NAME}/XmlHandler.h
 )
@@ -33,9 +44,11 @@ set(HEADERS
 Set(NO_DICT_SRCS
   src/ConditionsMQServer.cxx
   src/ConditionsMQClient.cxx
+  ${PROTO_SRCS}
 )
 
 set(LIBRARY_NAME ${MODULE_NAME})
+
 set(LINKDEF src/CCDBLinkDef.h)
 set(BUCKET_NAME CCDB_bucket)
 
