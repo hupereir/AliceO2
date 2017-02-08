@@ -583,10 +583,12 @@ o2_define_bucket(
     DEPENDENCIES
     muon_base_bucket
     root_base_bucket
-
-    MUONBase
-
     fairroot_base_bucket
+
+    dl
+
+    # aliroot
+    MUONBase
     ParBase
     CDB
     MUONbase
@@ -594,7 +596,8 @@ o2_define_bucket(
     RAWDatarec
     MUONmapping
 
-    Core RIO Tree #root
+    #root
+    Core RIO Tree
 
     ${Boost_PROGRAM_OPTIONS_LIBRARY}
     ${Boost_SYSTEM_LIBRARY}
