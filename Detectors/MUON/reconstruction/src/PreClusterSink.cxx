@@ -19,7 +19,7 @@ using namespace AliceO2::MUON;
 PreClusterSink::PreClusterSink()
 {
   // register a handler for data arriving on "data2" channel
-  OnData("data1", &PreClusterSink::HandleData);
+  OnData("data", &PreClusterSink::HandleData);
 }
 
 //_________________________________________________________________________________________________

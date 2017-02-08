@@ -179,7 +179,7 @@ bool DigitSampler::ConditionalRun( void )
       msgBuffer, size,
       [](void* data, void* /*object*/) { free( data ); } ) );
 
-    if( Send(msg, "data1") < 0 )
+    if( Send(msg, "data") < 0 )
     {
       LOG(ERROR) << "Sending failed";
       return false;

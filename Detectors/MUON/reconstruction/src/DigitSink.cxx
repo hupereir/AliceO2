@@ -16,7 +16,7 @@ using namespace AliceO2::MUON;
 DigitSink::DigitSink()
 {
   // register a handler for data arriving on "data2" channel
-  OnData("data1", &DigitSink::HandleData);
+  OnData("data", &DigitSink::HandleData);
 }
 
 //_________________________________________________________________________________________________
