@@ -7,7 +7,6 @@
 
 #include "PreClusterSink.h"
 
-#include "MUONBase/Digit.h"
 #include "MUONBase/PreCluster.h"
 
 #include <FairMQLogger.h>
@@ -30,12 +29,11 @@ PreClusterSink::~PreClusterSink()
 bool PreClusterSink::HandleData(FairMQMessagePtr& msg, int /*index*/)
 {
 
-  LOG(INFO) << "Recieved message of size " << msg->GetSize();
-
-  const Digit* digits = static_cast<const Digit*>( msg->GetData() );
-  const int nDigits = msg->GetSize()/sizeof( Digit );
-  for( int index = 0; index < nDigits; ++index )
-  { LOG(INFO) << "recieved: " << digits[index]; }
+  auto clusters = Deserialize( msg->GetData(), msg->GetSize() );
+  fEvent++;
+  LOG(INFO) << "Recieving " << clusters.size() << " clusters for event " << fEvent;
+  for( auto&& cluster:clusters )
+  { LOG(INFO) << "recieved: " << cluster; }
 
   return true;
 
