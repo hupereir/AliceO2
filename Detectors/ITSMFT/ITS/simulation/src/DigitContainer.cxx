@@ -2,11 +2,12 @@
 /// \brief Implementation of the ITS DigitContainer class
 //
 #include "ITSSimulation/DigitContainer.h"
-#include "ITSBase/Digit.h"
+#include "ITSMFTBase/Digit.h"
 
 #include "FairLogger.h" // for LOG
 
-using namespace AliceO2::ITS;
+using o2::ITSMFT::Digit;
+using namespace o2::ITS;
 
 void DigitContainer::reset()
 {

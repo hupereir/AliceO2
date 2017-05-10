@@ -11,9 +11,7 @@
 
 #include "DetectorsBase/Track.h"
 
-using namespace AliceO2::Base::Track;
-
-namespace AliceO2
+namespace o2
 {
 namespace ITS
 {
@@ -23,10 +21,10 @@ class CookedTrack : public TObject
 {
  public:
   CookedTrack();
-  CookedTrack(float x, float alpha, const std::array<float,kNParams> &par, const std::array<float,kCovMatSize> &cov);
+  CookedTrack(float x, float alpha, const std::array<float,o2::Base::Track::kNParams> &par, const std::array<float,o2::Base::Track::kCovMatSize> &cov);
   CookedTrack(const CookedTrack& t);
   CookedTrack& operator=(const CookedTrack& tr);
-  virtual ~CookedTrack();
+  ~CookedTrack() override;
 
   // These functions must be provided
   Double_t getPredictedChi2(const Cluster* c) const;
@@ -62,13 +60,13 @@ class CookedTrack : public TObject
   void resetCovariance(Double_t s2 = 0.) { mTrack.ResetCovariance(float(s2)); }
   
  private:
-  TrackParCov mTrack;        ///< Base track
+  o2::Base::Track::TrackParCov mTrack; ///< Base track
   Int_t mLabel;              ///< Monte Carlo label for this track
   Double_t mMass;            ///< Assumed mass for this track
   Double_t mChi2;            ///< Chi2 for this track
   std::vector<Int_t> mIndex; ///< Indices of associated clusters
 
-  ClassDef(CookedTrack, 1)
+  ClassDefOverride(CookedTrack, 1)
 };
 }
 }

@@ -5,8 +5,8 @@
 //****************************************************************************
 //* This file is free software: you can redistribute it and/or modify        *
 //* it under the terms of the GNU General Public License as published by     *
-//* the Free Software Foundation, either version 3 of the License, or	     *
-//* (at your option) any later version.					     *
+//* the Free Software Foundation, either version 3 of the License, or        *
+//* (at your option) any later version.                                      *
 //*                                                                          *
 //* Primary Authors: Matthias Richter <richterm@scieq.net>                   *
 //*                                                                          *
@@ -19,8 +19,11 @@
 //  @since  2015-03-15
 //  @brief  Sampler device for Alice HLT events in FairRoot/ALFA
 
-#include "FairMQDevice.h"
+#include <FairMQDevice.h>
 #include <vector>
+#include <boost/program_options.hpp>
+
+namespace bpo = boost::program_options;
 
 namespace ALICE {
 namespace HLT {
@@ -36,29 +39,38 @@ public:
   /// default constructor
   EventSampler(int verbosity=0);
   /// destructor
-  ~EventSampler();
+  ~EventSampler() override;
+
+  /// get description of options
+  static bpo::options_description GetOptionsDescription();
+
+  enum /*class*/ OptionKeyIds /*: int*/ {
+    OptionKeyEventPeriod = 0,
+    OptionKeyInitialDelay,
+    OptionKeyPollTimeout,
+    OptionKeyDryRun,
+    OptionKeyLatencyLog,
+    OptionKeyLast
+  };
+
+  constexpr static const char* OptionKeys[] = {
+    "eventperiod",
+    "initialdelay",
+    "polltimeout",
+    "dry-run",
+    "latency-log",
+    nullptr
+  };
 
   /////////////////////////////////////////////////////////////////
   // the FairMQDevice interface
 
   /// inherited from FairMQDevice
-  virtual void Init();
+  void InitTask() override;
   /// inherited from FairMQDevice
-  virtual void Run();
+  void Run() override;
   /// inherited from FairMQDevice
-  virtual void Pause();
-  /// inherited from FairMQDevice
-  /// handle device specific properties and forward to FairMQDevice::SetProperty
-  virtual void SetProperty(const int key, const std::string& value);
-  /// inherited from FairMQDevice
-  /// handle device specific properties and forward to FairMQDevice::GetProperty
-  virtual std::string GetProperty(const int key, const std::string& default_ = "");
-  /// inherited from FairMQDevice
-  /// handle device specific properties and forward to FairMQDevice::SetProperty
-  virtual void SetProperty(const int key, const int value);
-  /// inherited from FairMQDevice
-  /// handle device specific properties and forward to FairMQDevice::GetProperty
-  virtual int GetProperty(const int key, const int default_ = 0);
+  void Pause() override;
 
   /// sampler loop started in a separate thread
   void samplerLoop();
@@ -81,7 +93,7 @@ private:
   int mPollingTimeout;       // period of polling on input sockets in ms
   int mSkipProcessing;       // skip component processing
   int mVerbosity;            // verbosity level
-  std::string mOutputFile;   // output file for logging of latency
+  std::string mLatencyLogFileName;   // output file for logging of latency
 };
 
 } // namespace hlt

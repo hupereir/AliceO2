@@ -15,21 +15,26 @@
   #include <TEvePointSet.h>
   #include <TClonesArray.h>
   #include <TMath.h>
+  #include <TString.h>
 
-  #include "ITSSimulation/Point.h"
+  #include "ITSMFTSimulation/Point.h"
   #include "ITSReconstruction/Cluster.h"
   #include "ITSReconstruction/CookedTrack.h"
 #endif
 
 extern TGeoManager *gGeoManager;
 
-void DisplayTrack(int event=0, int track=0) {
-  using namespace AliceO2::ITS;
+void DisplayTrack(Int_t nEvents = 10, TString mcEngine = "TGeant3", Int_t event=0, Int_t track=0) {
+  using o2::ITSMFT::Point;
+  using namespace o2::ITS;
+
+  char filename[100];
 
   TEveManager::Create();
 
   // Full geometry
-  TFile *f = TFile::Open("AliceO2_TGeant3.params_10.root");
+  sprintf(filename, "AliceO2_%s.params_%i.root", mcEngine.Data(), nEvents);
+  TFile *f = TFile::Open(filename);
   f->Get("FairGeoParSet");
   f->Close();
   
@@ -69,7 +74,8 @@ void DisplayTrack(int event=0, int track=0) {
   */
   
   // Hits
-  f = TFile::Open("AliceO2_TGeant3.mc_10_event.root");
+  sprintf(filename, "AliceO2_%s.mc_%i_event.root", mcEngine.Data(), nEvents);
+  f = TFile::Open(filename);
   TTree *tree = (TTree *)gDirectory->Get("cbmsim");
 
   string s{"hits"};
@@ -77,7 +83,7 @@ void DisplayTrack(int event=0, int track=0) {
   TEvePointSet* points = new TEvePointSet(s.data());
   points->SetMarkerColor(kBlue);
 
-  TClonesArray pntArr("AliceO2::ITS::Point"), *ppntArr(&pntArr);
+  TClonesArray pntArr("o2::ITSMFT::Point"), *ppntArr(&pntArr);
   tree->SetBranchAddress("ITSPoint",&ppntArr);
 
   tree->GetEvent(event);
@@ -97,7 +103,8 @@ void DisplayTrack(int event=0, int track=0) {
 
 
   // Clusters
-  f = TFile::Open("AliceO2_TGeant3.clus_10_event.root");
+  sprintf(filename, "AliceO2_%s.clus_%i_event.root", mcEngine.Data(), nEvents);
+  f = TFile::Open(filename);
   tree = (TTree *)gDirectory->Get("cbmsim");
 
   s="clusters";
@@ -105,7 +112,7 @@ void DisplayTrack(int event=0, int track=0) {
   points = new TEvePointSet(s.data());
   points->SetMarkerColor(kMagenta);
   
-  TClonesArray clusArr("AliceO2::ITS::Cluster"), *pclusArr(&clusArr);
+  TClonesArray clusArr("o2::ITS::Cluster"), *pclusArr(&clusArr);
   tree->SetBranchAddress("ITSCluster",&pclusArr);
 
   tree->GetEvent(event);
@@ -130,7 +137,8 @@ void DisplayTrack(int event=0, int track=0) {
 
   
   // Track
-  f = TFile::Open("AliceO2_TGeant3.trac_10_event.root");
+  sprintf(filename, "AliceO2_%s.trac_%i_event.root", mcEngine.Data(), nEvents);
+  f = TFile::Open(filename);
   tree = (TTree *)gDirectory->Get("cbmsim");
 
   s="track";
@@ -138,7 +146,7 @@ void DisplayTrack(int event=0, int track=0) {
   points = new TEvePointSet(s.data());
   points->SetMarkerColor(kGreen);
   
-  TClonesArray trkArr("AliceO2::ITS::CookedTrack"), *ptrkArr(&trkArr);
+  TClonesArray trkArr("o2::ITS::CookedTrack"), *ptrkArr(&trkArr);
   tree->SetBranchAddress("ITSTrack",&ptrkArr);
 
   tree->GetEvent(event);

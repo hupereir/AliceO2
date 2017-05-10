@@ -16,18 +16,13 @@ set(SRCS
 
 set(LIBRARY_NAME ${MODULE_NAME})
 
-# Bucket uses DDS depending on whether it's found.
-set(BUCKET_NAME alicehlt_bucket)
+set(BUCKET_NAME O2DeviceApplication_bucket)
 
 O2_GENERATE_LIBRARY()
 
-# todo we repeat ourselves because the above macro dares deleting the variables we pass to it.
-set(LIBRARY_NAME ${MODULE_NAME})
-set(BUCKET_NAME alicehlt_bucket)
-
 Set(Exe_Names
-    aliceHLTWrapperApp
-    aliceHLTEventSampler
+    AliceHLTWrapperDevice
+    AliceHLTEventSamplerDevice
     runComponent
     )
 

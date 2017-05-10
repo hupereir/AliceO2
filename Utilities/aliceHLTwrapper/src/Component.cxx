@@ -1,8 +1,8 @@
 //****************************************************************************
 //* This file is free software: you can redistribute it and/or modify        *
 //* it under the terms of the GNU General Public License as published by     *
-//* the Free Software Foundation, either version 3 of the License, or	     *
-//* (at your option) any later version.					     *
+//* the Free Software Foundation, either version 3 of the License, or        *
+//* (at your option) any later version.                                      *
 //*                                                                          *
 //* Primary Authors: Matthias Richter <richterm@scieq.net>                   *
 //*                                                                          *
@@ -22,22 +22,24 @@
 #include <cstdlib>
 #include <cerrno>
 #include <cstring>
+#include <sstream>
 #include <iostream>
 #include <sstream>
 #include <getopt.h>
 #include <memory>
 using namespace ALICE::HLT;
-using namespace AliceO2::AliceHLT;
+using namespace o2::AliceHLT;
 
 using std::cerr;
 using std::endl;
 using std::string;
 using std::unique_ptr;
 using std::vector;
+using std::stringstream;
 
 Component::Component()
   : mOutputBuffer()
-  , mpSystem(NULL)
+  , mpSystem(nullptr)
   , mProcessor(kEmptyHLTComponentHandle)
   , mFormatHandler()
   , mEventCount(-1)
@@ -45,81 +47,97 @@ Component::Component()
 }
 
 Component::~Component()
+= default;
+
+constexpr const char* Component::OptionKeys[];
+
+bpo::options_description Component::GetOptionsDescription()
 {
+  bpo::options_description od("HLT Component options");
+  od.add_options()
+    ((std::string(OptionKeys[OptionKeyLibrary]) + ",l").c_str(),
+     bpo::value<string>()->required(),
+     "component library")
+    ((std::string(OptionKeys[OptionKeyComponent]) + ",c").c_str(),
+     bpo::value<string>()->required(),
+     "component id")
+    ((std::string(OptionKeys[OptionKeyParameter]) + ",p").c_str(),
+     bpo::value<string>()->default_value(""),
+     "component command line parameter")
+    ((std::string(OptionKeys[OptionKeyRun]) + ",r").c_str(),
+     bpo::value<string>()->default_value("-1"),
+     "run number")
+    ((std::string(OptionKeys[OptionKeyMsgsize]) + ",s").c_str(),
+     bpo::value<string>()->default_value("0"),
+     "maximum size of output buffer/msg")
+    ((std::string(OptionKeys[OptionKeyOutputMode]) + ",m").c_str(),
+     bpo::value<string>()->default_value("2"),
+     "output mode");
+
+  return od;
 }
 
 int Component::init(int argc, char** argv)
 {
   /// initialize: scan arguments, setup system interface and create component
 
-  // parse options
-  static struct option programOptions[] = {
-    {"library",     required_argument, 0, 'l'},
-    {"component",   required_argument, 0, 'c'},
-    {"parameter",   required_argument, 0, 'p'},
-    {"run",         required_argument, 0, 'r'},
-    {"msgsize",     required_argument, 0, 's'},
-    {"output-mode", required_argument, 0, 'm'},
-    {"instance-id", required_argument, 0, 'i'},
-    {0, 0, 0, 0}
-  };
-
-  /* getopt_long stores the option index here. */
-  char c = 0;
-  int iOption = 0;
+  // the hidden options are not exposed to the outside
+  bpo::options_description od("component options");
+  od.add_options()
+    (OptionKeys[OptionKeyInstanceId],
+     bpo::value<string>()->required(),
+     "internal instance id");
+  // now add all the visible options
+  od.add(GetOptionsDescription());
 
   // HLT components are implemented in shared libraries, the library name
   // and component id are used to factorize a component
   // optionally, a list of configuration parameters can be specified as
   // one single string which is translated in an array of string in the
   // argc/argv format
-  const char* componentLibrary = "";
-  const char* componentId = "";
-  const char* componentParameter = "";
-  const char* instanceId="";
+  string componentParameter;
+  string instanceId;
 
   // the configuration and calibration is fixed for every run and identified
   // by the run no
   int runNumber = 0;
 
-  optind = 1; // indicate new start of scanning, especially when getop has been used in a higher layer already
-  while ((c = getopt_long(argc, argv, "l:c:p:r:s:m:i:", programOptions, &iOption)) != -1) {
-    switch (c) {
-      case 'l':
-        componentLibrary = optarg;
-        break;
-      case 'c':
-        componentId = optarg;
-        break;
-      case 'p':
-        componentParameter = optarg;
-        break;
-      case 'r':
-        std::stringstream(optarg) >> runNumber;
-        break;
-      case 's': {
-        unsigned size = 0;
-        std::stringstream(optarg) >> size;
-        mOutputBuffer.resize(size);
-      } break;
-      case 'm': {
-        unsigned outputMode;
-        std::stringstream(optarg) >> outputMode;
-        mFormatHandler.setOutputMode(outputMode);
-      } break;
-      case 'i': {
-        instanceId=optarg;
-        break;
-      }
-      case '?':
-        // TODO: more error handling
-        break;
-      default:
-        cerr << "unknown option: '" << c << "'" << endl;
+  bpo::variables_map varmap;
+  bpo::store(bpo::parse_command_line(argc, argv, od), varmap);
+
+  for (int option = 0; option < OptionKeyLast; ++option) {
+    if (varmap.count(OptionKeys[option]) == 0) continue;
+    switch (option) {
+    case OptionKeyLibrary: break;
+    case OptionKeyComponent: break;
+    case OptionKeyParameter:
+      componentParameter = varmap[OptionKeys[option]].as<string>();
+      break;
+    case OptionKeyRun:
+      stringstream(varmap[OptionKeys[option]].as<string>()) >> runNumber;
+      break;
+    case OptionKeyMsgsize: {
+      unsigned size = 0;
+      stringstream(varmap[OptionKeys[option]].as<string>()) >> size;
+      mOutputBuffer.resize(size);
+    } break;
+    case OptionKeyOutputMode: {
+      unsigned mode;
+      stringstream(varmap[OptionKeys[option]].as<string>()) >> mode;
+      mFormatHandler.setOutputMode(mode);
+    } break;
+    case OptionKeyInstanceId: break;
+      instanceId = varmap[OptionKeys[option]].as<string>();
+      break;
     }
   }
 
-  if (componentLibrary == NULL || componentLibrary[0] == 0 || componentId == NULL || componentId[0] == 0 ||
+  // TODO: this can be a loop over all required options
+  // probably we won't come here anyhow as the parser will detect
+  // the absence of a required parameter, check and handle the parser
+  // exception
+  if (varmap.count(OptionKeys[OptionKeyLibrary]) == 0 ||
+      varmap.count(OptionKeys[OptionKeyComponent]) == 0 ||
       runNumber < 0) {
     cerr << "missing argument" << endl;
     return -EINVAL;
@@ -128,7 +146,7 @@ int Component::init(int argc, char** argv)
   int iResult = 0;
   // TODO: make the SystemInterface a singleton
   unique_ptr<ALICE::HLT::SystemInterface> iface(new SystemInterface);
-  if (iface.get() == NULL || ((iResult = iface->initSystem(runNumber))) < 0) {
+  if (iface.get() == nullptr || ((iResult = iface->initSystem(runNumber))) < 0) {
     // LOG(ERROR) << "failed to set up SystemInterface " << iface.get() << " (" << iResult << ")";
     return -ENOSYS;
   }
@@ -137,14 +155,15 @@ int Component::init(int argc, char** argv)
   mpSystem = iface.release();
 
   // load the component library
-  if ((iResult = mpSystem->loadLibrary(componentLibrary)) != 0) return iResult > 0 ? -iResult : iResult;
+  if ((iResult = mpSystem->loadLibrary(varmap[OptionKeys[OptionKeyLibrary]].as<string>().c_str())) != 0)
+    return iResult > 0 ? -iResult : iResult;
 
   // chop the parameter string in order to provide parameters in the argc/argv format
   vector<const char*> parameters;
-  unsigned parameterLength = strlen(componentParameter);
+  unsigned parameterLength = componentParameter.length();
   unique_ptr<char> parameterBuffer(new char[parameterLength + 1]);
-  if (parameterLength > 0 && parameterBuffer.get() != NULL) {
-    strcpy(parameterBuffer.get(), componentParameter);
+  if (parameterLength > 0 && parameterBuffer.get() != nullptr) {
+    strcpy(parameterBuffer.get(), componentParameter.c_str());
     char* iterator = parameterBuffer.get();
     parameters.push_back(iterator);
     for (; *iterator != 0; iterator++) {
@@ -156,8 +175,8 @@ int Component::init(int argc, char** argv)
 
   // create component
   string description;
-  description+=" chainid="; description+=instanceId;
-  if ((iResult=mpSystem->createComponent(componentId, NULL, parameters.size(), &parameters[0], &mProcessor, description.c_str()))<0) {
+  description+=" chainid=" + instanceId;
+  if ((iResult=mpSystem->createComponent(varmap[OptionKeys[OptionKeyComponent]].as<string>().c_str(), nullptr, parameters.size(), &parameters[0], &mProcessor, description.c_str()))<0) {
     // the ALICE HLT external interface uses the following error definition
     // 0 success
     // >0 error number
@@ -191,8 +210,8 @@ int Component::process(vector<MessageFormat::BufferDesc_t>& dataArray,
   trigData.fStructSize = sizeof(trigData);
 
   AliHLTUInt32_t outputBlockCnt = 0;
-  AliHLTComponentBlockData* pOutputBlocks = NULL;
-  AliHLTComponentEventDoneData* pEventDoneData = NULL;
+  AliHLTComponentBlockData* pOutputBlocks = nullptr;
+  AliHLTComponentEventDoneData* pEventDoneData = nullptr;
 
   // prepare input structure for the ALICE HLT component
   mFormatHandler.clear();
@@ -248,9 +267,9 @@ int Component::process(vector<MessageFormat::BufferDesc_t>& dataArray,
     // TODO: check if that is working with the corresponding allocation method of the
     // component environment
     if (pOutputBlocks) delete[] pOutputBlocks;
-    pOutputBlocks = NULL;
+    pOutputBlocks = nullptr;
     if (pEventDoneData) delete pEventDoneData;
-    pEventDoneData = NULL;
+    pEventDoneData = nullptr;
 
     iResult = mpSystem->processEvent(mProcessor, &evtData, &inputBlocks[0], &trigData,
                                      &mOutputBuffer[0], &outputBufferSize,
@@ -296,14 +315,14 @@ int Component::process(vector<MessageFormat::BufferDesc_t>& dataArray,
 
       // calculate the data reference
       AliHLTUInt8_t* pStart =
-        pOutputBlock->fPtr != NULL ? reinterpret_cast<AliHLTUInt8_t*>(pOutputBlock->fPtr) : &mOutputBuffer[0];
+        pOutputBlock->fPtr != nullptr ? reinterpret_cast<AliHLTUInt8_t*>(pOutputBlock->fPtr) : &mOutputBuffer[0];
       pStart += pOutputBlock->fOffset;
       AliHLTUInt8_t* pEnd = pStart + pOutputBlock->fSize;
       pOutputBlock->fPtr = pStart;
       pOutputBlock->fOffset = 0;
 
       // first search in the output buffer
-      bValid = bValid || pStart >= pOutputBufferStart && pEnd <= pOutputBufferEnd;
+      bValid = bValid || (pStart >= pOutputBufferStart && pEnd <= pOutputBufferEnd);
 
       // possibly a forwarded data block, try the input buffers
       if (!bValid) {
@@ -342,9 +361,9 @@ int Component::process(vector<MessageFormat::BufferDesc_t>& dataArray,
   inputBlocks.clear();
   outputBlockCnt = 0;
   if (pOutputBlocks) delete[] pOutputBlocks;
-  pOutputBlocks = NULL;
+  pOutputBlocks = nullptr;
   if (pEventDoneData) delete pEventDoneData;
-  pEventDoneData = NULL;
+  pEventDoneData = nullptr;
 
   return -iResult;
 }

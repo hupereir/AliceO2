@@ -5,8 +5,8 @@
 //****************************************************************************
 //* This file is free software: you can redistribute it and/or modify        *
 //* it under the terms of the GNU General Public License as published by     *
-//* the Free Software Foundation, either version 3 of the License, or	     *
-//* (at your option) any later version.					     *
+//* the Free Software Foundation, either version 3 of the License, or        *
+//* (at your option) any later version.                                      *
 //*                                                                          *
 //* Primary Authors: Matthias Richter <richterm@scieq.net>                   *
 //*                                                                          *
@@ -23,8 +23,11 @@
 #include "MessageFormat.h"
 #include <vector>
 #include <boost/signals2.hpp>
+#include <boost/program_options.hpp>
 //using boost::signals2::signal;
 typedef boost::signals2::signal<unsigned char* (unsigned int)> cballoc_signal_t;
+
+namespace bpo = boost::program_options;
 
 namespace ALICE {
 namespace HLT {
@@ -66,6 +69,39 @@ public:
   /// destructor
   ~Component();
 
+  /// get description of options
+  static bpo::options_description GetOptionsDescription();
+
+  // TODO: have been trying to use strongly typed enums, however
+  // the problem starts with the iteration over all elements (which
+  // doen't seem to work without specialized coding in the enum class)
+  // Furthermore, one would need to use a map which can not be used in
+  // a constexpr because of the non-trivial destructor
+  // Keep the solution with the simple const char array for the OptionKeys
+  // and live with the fact that changing the sequence causes a runtime
+  // error, and a compile time check is not possible
+  enum /*class*/ OptionKeyIds /*: int*/ {
+    OptionKeyLibrary = 0,
+    OptionKeyComponent,
+    OptionKeyParameter,
+    OptionKeyRun,
+    OptionKeyMsgsize,
+    OptionKeyOutputMode,
+    OptionKeyInstanceId,
+    OptionKeyLast
+  };
+
+  constexpr static const char* OptionKeys[] = {
+    "library",
+    "component",
+    "parameter",
+    "run",
+    "msgsize",
+    "output-mode",
+    "instance-id",
+    nullptr
+  };
+
   /// Init the component
   int init(int argc, char** argv);
 
@@ -74,7 +110,7 @@ public:
   /// the AliHLTComponentBlockData header immediately followed by the block
   /// payload. After processing, handles to output blocks are provided in this
   /// list.
-  int process(std::vector<AliceO2::AliceHLT::MessageFormat::BufferDesc_t>& dataArray,
+  int process(std::vector<o2::AliceHLT::MessageFormat::BufferDesc_t>& dataArray,
               cballoc_signal_t* cbAllocate=nullptr);
 
   int getEventCount() const {return mEventCount;}
@@ -95,7 +131,7 @@ private:
   /// handle of the processing component
   AliHLTComponentHandle mProcessor;
   /// container for handling the i/o buffers
-  AliceO2::AliceHLT::MessageFormat mFormatHandler;
+  o2::AliceHLT::MessageFormat mFormatHandler;
   int mEventCount;
 };
 

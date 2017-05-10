@@ -18,10 +18,6 @@ set(BUCKET_NAME QC_viewer_bucket)
 
 O2_GENERATE_LIBRARY()
 
-# todo we repeat ourselves because the above macro dares deleting the variables we pass to it.
-set(LIBRARY_NAME ${MODULE_NAME})
-set(BUCKET_NAME QC_viewer_bucket)
-
 # Define application
 O2_GENERATE_EXECUTABLE(
     EXE_NAME runQCViewerDevice
@@ -32,12 +28,14 @@ O2_GENERATE_EXECUTABLE(
 
 ADD_DEFINITIONS(-DBOOST_TEST_DYN_LINK)
 
-set(TEST_SRCS
-    test/ViewerTestSuite.cxx
-    )
+if(FALSE)
+  set(TEST_SRCS
+      test/ViewerTestSuite.cxx
+      )
 
-O2_GENERATE_TESTS(
-    MODULE_LIBRARY_NAME ${LIBRARY_NAME}
-    BUCKET_NAME ${BUCKET_NAME}
-    TEST_SRCS ${TEST_SRCS}
-)
+  O2_GENERATE_TESTS(
+      MODULE_LIBRARY_NAME ${LIBRARY_NAME}
+      BUCKET_NAME ${BUCKET_NAME}
+      TEST_SRCS ${TEST_SRCS}
+  )
+endif()

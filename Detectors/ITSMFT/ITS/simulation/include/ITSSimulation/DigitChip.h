@@ -9,11 +9,18 @@
 
 class TClonesArray;
 
-namespace AliceO2
+namespace o2
+{
+  namespace ITSMFT
+  {
+  class Digit;
+  }
+}
+
+namespace o2
 {
   namespace ITS
   {
-    class Digit;
 
     class DigitChip
     {
@@ -24,16 +31,16 @@ namespace AliceO2
       static void setNumberOfRows(Int_t nr) { sNumOfRows = nr; }
       void reset();
 
-      Digit* getDigit(UShort_t row, UShort_t col);
+      o2::ITSMFT::Digit* getDigit(UShort_t row, UShort_t col);
 
-      Digit* addDigit(UShort_t chipid, UShort_t row, UShort_t col, Double_t charge, Double_t timestamp);
+      o2::ITSMFT::Digit* addDigit(UShort_t chipid, UShort_t row, UShort_t col, Double_t charge, Double_t timestamp);
 
       void fillOutputContainer(TClonesArray* outputcont);
 
     private:
-      Digit* findDigit(Int_t idx);
+      o2::ITSMFT::Digit* findDigit(Int_t idx);
       static Int_t sNumOfRows;         ///< Number of rows in the pixel matrix
-      std::map<Int_t, Digit*> mPixels; ///< Map of fired pixels
+      std::map<Int_t, o2::ITSMFT::Digit*> mPixels; ///< Map of fired pixels
     };
   }
 }

@@ -25,14 +25,15 @@
 #include <TGeoMatrix.h>
 #include <TClonesArray.h>
 
-#include "ITSSimulation/Point.h"
+#include "ITSMFTSimulation/Point.h"
 #include "ITSBase/GeometryTGeo.h"
 #include "DetectorsBase/Utils.h"
 
 
-using namespace AliceO2::ITS::CA;
-using AliceO2::Base::Constants::k2PI;
-using AliceO2::Base::Utils::BringTo02Pi;
+using namespace o2::ITS::CA;
+using o2::Base::Constants::k2PI;
+using o2::Base::Utils::BringTo02Pi;
+using o2::ITSMFT::Point;
 
 TrackingStation::TrackingStation() :
   mID(-1)
@@ -48,8 +49,8 @@ TrackingStation::TrackingStation() :
   ,mQueryZBmax(-1)
   ,mQueryPhiBmin(-1)
   ,mQueryPhiBmax(-1)
-  ,mBins(0)
-  ,mOccBins(0)
+  ,mBins(nullptr)
+  ,mOccBins(nullptr)
   ,mNOccBins(0)
   ,mNFoundClusters(0)
   ,mFoundClusterIterator(0)
@@ -75,8 +76,8 @@ TrackingStation::TrackingStation() :
   ,mQueryZBmax(-1)
   ,mQueryPhiBmin(-1)
   ,mQueryPhiBmax(-1)
-  ,mBins(0)
-  ,mOccBins(0)
+  ,mBins(nullptr)
+  ,mOccBins(nullptr)
   ,mNOccBins(0)
   ,mNFoundClusters(0)
   ,mFoundClusterIterator(0)
@@ -94,7 +95,7 @@ TrackingStation::~TrackingStation() {
   delete[] mOccBins;
 }
 
-void TrackingStation::Init(TClonesArray* points, AliceO2::ITS::GeometryTGeo* geo) {
+void TrackingStation::Init(TClonesArray* points, o2::ITS::GeometryTGeo* geo) {
   if (mNZBins < 1)   mNZBins = 2;
   if (mNPhiBins < 1) mNPhiBins = 1;
   mDZInv   = mNZBins / (mZMax - mZMin);

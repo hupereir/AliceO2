@@ -39,14 +39,14 @@ void run_sim_mft(Int_t nEvents = 1, Int_t nMuons = 100, TString mcEngine = "TGea
   run->SetMaterials("media.geo"); // Materials
 
   // Create geometry
-  AliceO2::Passive::Cave* cave = new AliceO2::Passive::Cave("CAVE");
+  o2::Passive::Cave* cave = new o2::Passive::Cave("CAVE");
   cave->SetGeometryFileName("cave.geo");
   run->AddModule(cave);
 
-  //TGeoGlobalMagField::Instance()->SetField(new AliceO2::Field::MagneticField("Maps","Maps", -1., -1., AliceO2::Field::MagneticField::k5kG));
+  o2::field::MagneticField field("field","field +5kG");
+  run->SetField(&field);
 
-  AliceO2::MFT::Detector* mft = new AliceO2::MFT::Detector();
-
+  o2::MFT::Detector* mft = new o2::MFT::Detector();
   run->AddModule(mft);
   
   // Create PrimaryGenerator
@@ -73,14 +73,12 @@ void run_sim_mft(Int_t nEvents = 1, Int_t nMuons = 100, TString mcEngine = "TGea
   rtdb->saveOutput();
   rtdb->print();
   
-  //AliceO2::MFT::GeometryTGeo *geom = mft->GetGeometryTGeo();
-  //printf("MFT has %d disks.\n",geom->GetNofDisks());
-
   run->Run(nEvents);
   run->CreateGeometryFile("geofile_mft.root");
 
   // Finish
   timer.Stop();
+
   Double_t rtime = timer.RealTime();
   Double_t ctime = timer.CpuTime();
   cout << endl << endl;

@@ -13,9 +13,9 @@
 #include <TString.h>             // for TString
 #include "FairWriteoutBuffer.h"  // for FairWriteoutBuffer
 #include "Rtypes.h"              // for DigitWriteoutBuffer::Class, Bool_t, etc
-#include "ITSBase/Digit.h"            // for Digit
+#include "ITSMFTBase/Digit.h"            // for Digit
 
-namespace AliceO2 {
+namespace o2 {
 namespace ITS {
 class DigitWriteoutBuffer : public FairWriteoutBuffer
 {
@@ -24,21 +24,21 @@ class DigitWriteoutBuffer : public FairWriteoutBuffer
 
     DigitWriteoutBuffer(TString branchname, TString foldername, Bool_t persistance);
 
-    virtual ~DigitWriteoutBuffer();
+    ~DigitWriteoutBuffer() override;
 
     // Implementation of virtual function required by the interface
-    void AddNewDataToTClonesArray(FairTimeStamp *);
+    void AddNewDataToTClonesArray(FairTimeStamp *) override;
 
-    virtual double FindTimeForData(FairTimeStamp *);
+    double FindTimeForData(FairTimeStamp *) override;
 
-    virtual void FillDataMap(FairTimeStamp *data, double activeTime);
+    void FillDataMap(FairTimeStamp *data, double activeTime) override;
 
-    virtual void EraseDataFromDataMap(FairTimeStamp *data);
+    void EraseDataFromDataMap(FairTimeStamp *data) override;
 
   protected:
-    std::map<Digit, double> fData_map;
+    std::map<o2::ITSMFT::Digit, double> mData_map;
 
-  ClassDef(DigitWriteoutBuffer, 1);
+  ClassDefOverride(DigitWriteoutBuffer, 1);
 };
 }
 }

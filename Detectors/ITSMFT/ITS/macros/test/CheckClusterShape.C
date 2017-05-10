@@ -2,6 +2,8 @@
 /// \brief Simple macro to check ITSU digits
 
 #if !defined(__CINT__) || defined(__MAKECINT__)
+#include <climits>
+
 #include <TFile.h>
 #include <TTree.h>
 #include <TClonesArray.h>
@@ -10,13 +12,15 @@
 #include <TCanvas.h>
 
 #include "ITSBase/GeometryTGeo.h"
-#include "ITSBase/SegmentationPixel.h"
-#include "ITSBase/Digit.h"
+#include "ITSMFTBase/SegmentationPixel.h"
+#include "ITSMFTBase/Digit.h"
 #include "ITSSimulation/Point.h"
 #include "ITSSimulation/ClusterShape.h"
 #endif
 
-using namespace AliceO2::ITS;
+using o2::ITSMFT::SegmentationPixel;
+using o2::ITSMFT::Digit;
+using namespace o2::ITS;
 GeometryTGeo *gman;
 SegmentationPixel *seg;
 
@@ -207,7 +211,7 @@ void CheckClusterShape() {
   // Digits
   TFile *file1 = TFile::Open("AliceO2_TGeant3.digi_10_event.root");
   TTree *digTree=(TTree*)gFile->Get("cbmsim");
-  TClonesArray digArr("AliceO2::ITS::Digit"), *pdigArr(&digArr);
+  TClonesArray digArr("o2::ITS::Digit"), *pdigArr(&digArr);
   digTree->SetBranchAddress("ITSDigit",&pdigArr);
 
   TH1F *freqDist = new TH1F("freqDist", "", 300, 0, 300);

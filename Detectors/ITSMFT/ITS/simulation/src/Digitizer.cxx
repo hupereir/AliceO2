@@ -1,31 +1,35 @@
-/// \file AliITSDigitizer.cxx
+/// \file Digitizer.cxx
 /// \brief Implementation of the ITS digitizer
 
-#include "ITSBase/Digit.h"
-#include "ITSBase/SegmentationPixel.h"
-#include "ITSSimulation/Chip.h"
+#include "ITSMFTBase/Digit.h"
+#include "ITSMFTBase/SegmentationPixel.h"
+#include "ITSMFTSimulation/Point.h"
 #include "ITSSimulation/DigitChip.h"
 #include "ITSSimulation/Digitizer.h"
-#include "ITSSimulation/Point.h"
-#include "ITSSimulation/SimulationAlpide.h"
 
 #include "FairLogger.h"   // for LOG
 #include "TClonesArray.h" // for TClonesArray
 
-ClassImp(AliceO2::ITS::Digitizer)
+ClassImp(o2::ITS::Digitizer)
 
-  using namespace AliceO2::ITS;
+using o2::ITSMFT::Point;
+using o2::ITSMFT::Chip;
+using o2::ITSMFT::SimulationAlpide;
+using o2::ITSMFT::Digit;
+using o2::ITSMFT::SegmentationPixel;
+
+using namespace o2::ITS;
 
 Digitizer::Digitizer() : mGeometry(), mNumOfChips(0), mChips(), mSimulations(), mDigitContainer() {}
 
-Digitizer::~Digitizer() {}
+Digitizer::~Digitizer() = default;
 
 void Digitizer::init(Bool_t build)
 {
   mGeometry.Build(build);
   mNumOfChips = mGeometry.getNumberOfChips();
 
-  mChips.resize(mNumOfChips, Chip(0, &mGeometry));
+  mChips.resize(mNumOfChips);
   mSimulations.resize(mNumOfChips);
   mDigitContainer.resize(mNumOfChips);
 
@@ -39,7 +43,7 @@ void Digitizer::init(Bool_t build)
     1.084   // ACSFromBGPar2
   };
   for (Int_t i = 0; i < mNumOfChips; i++) {
-    mChips[i].SetChipIndex(i);
+    mChips[i].Init(i, mGeometry.getMatrixSensor(i));
     mSimulations[i].Init(param, seg, &mChips[i]);
   }
 }

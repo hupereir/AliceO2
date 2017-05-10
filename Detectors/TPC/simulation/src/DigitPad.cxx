@@ -1,31 +1,30 @@
+/// \file DigitPad.cxx
+/// \brief Implementation of the Pad container
+/// \author Andi Mathis, TU München, andreas.mathis@ph.tum.de
+
 #include "TPCSimulation/DigitPad.h"
-#include "TPCSimulation/Digitizer.h"
-#include "TPCSimulation/Digit.h"
+#include "TPCSimulation/SAMPAProcessing.h"
+#include "TPCBase/PadPos.h"
+#include "TPCBase/PadSecPos.h"
+#include "TPCBase/CRU.h"
+#include "TPCSimulation/DigitMC.h"
 
-#include "TClonesArray.h"
-#include "FairLogger.h"
-using namespace AliceO2::TPC;
+#include <boost/range/adaptor/reversed.hpp>
+#include <boost/bind.hpp>
 
-DigitPad::DigitPad(Int_t pad) :
-mPad(pad)
-{}
+using namespace o2::TPC;
 
-DigitPad::~DigitPad() {
-  mADCCounts.resize(0);
-}
+void DigitPad::fillOutputContainer(TClonesArray *output, int cru, int timeBin, int row, int pad, float commonMode)
+{
+  /// The charge accumulated on that pad is converted into ADC counts, saturation of the SAMPA is applied and a Digit is created in written out
+  const float totalADC = mChargePad - commonMode; // common mode is subtracted here in order to properly apply noise, pedestals and saturation of the SAMPA
 
-void DigitPad::fillOutputContainer(TClonesArray *output, Int_t cru, Int_t timeBin, Int_t row, Int_t pad) {  
-  Float_t mCharge = 0;
-  for(auto &aADCCounts : mADCCounts) {
-    mCharge += aADCCounts.getADC();
-  }
-  
-  Digitizer d;
-  const Int_t mADC = d.ADCvalue(mCharge);
-  
+  const float mADC = SAMPAProcessing::makeSignal(totalADC, PadSecPos(CRU(cru).sector(), PadPos(row, pad)));
   if(mADC > 0) {
-    Digit *digit = new Digit(cru, mADC, row, pad, timeBin);
     TClonesArray &clref = *output;
-    new(clref[clref.GetEntriesFast()]) Digit(*(digit));
+    const size_t digiPos = clref.GetEntriesFast();
+    DigitMC *digit = new(clref[digiPos]) DigitMC(cru, mADC, row, pad, timeBin, commonMode);
+    digit->SetLinks(getMCLinks());
   }
 }
+

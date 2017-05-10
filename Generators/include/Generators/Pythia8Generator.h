@@ -19,7 +19,7 @@
 #define _DLFCN_H
 #endif
 
-#include "Basics.h"          // for RndmEngine
+#include "Pythia8/Basics.h"          // for RndmEngine
 #include "FairGenerator.h"   // for FairGenerator
 #include "Pythia8/Pythia.h"  // for Pythia
 #include "Rtypes.h"          // for Double_t, Bool_t, Int_t, etc
@@ -35,10 +35,10 @@ class PyTr1Rng : public RndmEngine
 {
  public:
   PyTr1Rng() {  rng = new TRandom1(gRandom->GetSeed()); };
-  virtual ~PyTr1Rng() {};
-  
-  Double_t flat() { return rng->Rndm(); };
-  
+  ~PyTr1Rng() override = default;
+
+  Double_t flat() override { return rng->Rndm(); };
+
  private:
   TRandom1 *rng; //!
 };
@@ -47,10 +47,10 @@ class PyTr3Rng : public RndmEngine
 {
  public:
   PyTr3Rng() {  rng = new TRandom3(gRandom->GetSeed()); };
-  virtual ~PyTr3Rng() {};
-  
-  Double_t flat() { return rng->Rndm(); };
-  
+  ~PyTr3Rng() override = default;
+
+  Double_t flat() override { return rng->Rndm(); };
+
  private:
   TRandom3 *rng; //!
 };
@@ -61,20 +61,20 @@ class PyTr3Rng : public RndmEngine
 class Pythia8Generator : public FairGenerator
 {
  public:
-  
+
   /** default constructor **/
   Pythia8Generator();
-  
+
   /** destructor **/
-  virtual ~Pythia8Generator();
-  
+  ~Pythia8Generator() override;
+
   /** public method ReadEvent **/
-  Bool_t ReadEvent(FairPrimaryGenerator*);
+  Bool_t ReadEvent(FairPrimaryGenerator*) override;
   void SetParameters(char*);
   void Print(); //!
-  
-  virtual Bool_t Init(); //!
-  
+
+  Bool_t Init() override; //!
+
   void SetMom(Double_t mom) { fMom = mom; };
   void SetId(Double_t id) { fId  = id; };
   void SetHNLId(Int_t id) { fHNL = id; };
@@ -83,19 +83,19 @@ class Pythia8Generator : public FairGenerator
   void GetPythiaInstance(int);
 
  private:
-  
+
   Pythia fPythia;             //!
   RndmEngine* fRandomEngine;  //!
-  
+
  protected:
-  
+
   Double_t fMom;       // proton momentum
   Int_t    fHNL;       // HNL ID
   Int_t    fId;       // target type
   Bool_t fUseRandom1;  // flag to use TRandom1
   Bool_t fUseRandom3;  // flag to use TRandom3 (default)
 
-  ClassDef(Pythia8Generator,1);
+  ClassDefOverride(Pythia8Generator,1);
 };
 
 #endif /* !PNDP8GENERATOR_H */

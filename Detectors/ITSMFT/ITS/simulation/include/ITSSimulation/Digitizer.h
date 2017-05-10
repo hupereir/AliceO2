@@ -8,23 +8,22 @@
 #include "Rtypes.h"  // for Digitizer::Class, Double_t, ClassDef, etc
 #include "TObject.h" // for TObject
 
+#include "ITSMFTSimulation/Chip.h"
+#include "ITSMFTSimulation/SimulationAlpide.h"
 #include "ITSBase/GeometryTGeo.h"
 #include "ITSSimulation/DigitContainer.h"
 
 class TClonesArray;
 
-namespace AliceO2
+namespace o2
 {
   namespace ITS
   {
-    class Chip;
-    class SimulationAlpide;
-
     class Digitizer : public TObject
     {
     public:
       Digitizer();
-      ~Digitizer();
+      ~Digitizer() override;
 
       void init(Bool_t build = kTRUE);
 
@@ -40,11 +39,11 @@ namespace AliceO2
 
       GeometryTGeo mGeometry;                     ///< ITS upgrade geometry
       Int_t mNumOfChips;                          ///< Number of chips
-      std::vector<Chip> mChips;                   ///< Array of chips
-      std::vector<SimulationAlpide> mSimulations; ///< Array of chips response simulations
+      std::vector<o2::ITSMFT::Chip> mChips;  ///< Array of chips
+      std::vector<o2::ITSMFT::SimulationAlpide> mSimulations; ///< Array of chips response simulations
       DigitContainer mDigitContainer;             ///< Internal digit storage
 
-      ClassDef(Digitizer, 2);
+      ClassDefOverride(Digitizer, 2);
     };
   }
 }

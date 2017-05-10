@@ -28,7 +28,7 @@ if(NOT FairMQ_FIND_QUIETLY)
 endif(NOT FairMQ_FIND_QUIETLY)
 
 find_path(FAIRMQ_INCLUDE_DIR NAMES ${FAIRMQ_REQUIRED_HEADERS}
-  PATHS ${FAIRROOTPATH}/include
+  PATHS ${FAIRROOTPATH}/include/fairmq
   NO_DEFAULT_PATH
 )
 
@@ -43,7 +43,7 @@ if(FAIRMQ_INCLUDE_DIR)
   set(FAIRMQ_FOUND TRUE)
 else(FAIRMQ_INCLUDE_DIR)
   if(FairMQ_FIND_REQUIRED)
-    message(STATUS "FairRoot is not built with FairMQ support")
+    message(FATAL_ERROR "FairRoot is not built with FairMQ support")
   else(FairMQ_FIND_REQUIRED)
     if(NOT FairMQ_FIND_QUIETLY)
       message(STATUS "Looking for FairMQ functionality in FairRoot: no")

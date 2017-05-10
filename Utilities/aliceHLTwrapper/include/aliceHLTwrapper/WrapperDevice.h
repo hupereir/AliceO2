@@ -5,8 +5,8 @@
 //****************************************************************************
 //* This file is free software: you can redistribute it and/or modify        *
 //* it under the terms of the GNU General Public License as published by     *
-//* the Free Software Foundation, either version 3 of the License, or	     *
-//* (at your option) any later version.					     *
+//* the Free Software Foundation, either version 3 of the License, or        *
+//* (at your option) any later version.                                      *
 //*                                                                          *
 //* Primary Authors: Matthias Richter <richterm@scieq.net>                   *
 //*                                                                          *
@@ -19,8 +19,11 @@
 //  @since  2014-05-08
 //  @brief  FairRoot/ALFA device running ALICE HLT code
 
-#include "FairMQDevice.h"
+#include <FairMQDevice.h>
 #include <vector>
+#include <boost/program_options.hpp>
+
+namespace bpo = boost::program_options;
 
 class FairMQMessage;
 
@@ -38,33 +41,48 @@ class Component;
 class WrapperDevice : public FairMQDevice {
 public:
   /// default constructor
-  WrapperDevice(int argc, char** argv, int verbosity = 0);
+  WrapperDevice(int verbosity = 0);
   /// destructor
-  ~WrapperDevice();
+  ~WrapperDevice() override;
+
+  /// get description of options
+  static bpo::options_description GetOptionsDescription();
+
+  enum /*class*/ OptionKeyIds /*: int*/ {
+    OptionKeyPollPeriod = 0,
+    OptionKeyDryRun,
+    OptionKeyLast
+  };
+
+  constexpr static const char* OptionKeys[] = {
+    "poll-period",
+    "dry-run",
+    nullptr
+  };
 
   /////////////////////////////////////////////////////////////////
   // the FairMQDevice interface
 
   /// inherited from FairMQDevice
-  virtual void Init();
+  void Init() override;
   /// inherited from FairMQDevice
-  virtual void InitTask();
+  void InitTask() override;
   /// inherited from FairMQDevice
-  virtual void Run();
+  void Run() override;
   /// inherited from FairMQDevice
-  virtual void Pause();
-  /// inherited from FairMQDevice
-  /// handle device specific properties and forward to FairMQDevice::SetProperty
-  virtual void SetProperty(const int key, const std::string& value);
-  /// inherited from FairMQDevice
-  /// handle device specific properties and forward to FairMQDevice::GetProperty
-  virtual std::string GetProperty(const int key, const std::string& default_ = "");
+  void Pause() override;
   /// inherited from FairMQDevice
   /// handle device specific properties and forward to FairMQDevice::SetProperty
-  virtual void SetProperty(const int key, const int value);
+  void SetProperty(const int key, const std::string& value) override;
   /// inherited from FairMQDevice
   /// handle device specific properties and forward to FairMQDevice::GetProperty
-  virtual int GetProperty(const int key, const int default_ = 0);
+  std::string GetProperty(const int key, const std::string& default_ = "") override;
+  /// inherited from FairMQDevice
+  /// handle device specific properties and forward to FairMQDevice::SetProperty
+  void SetProperty(const int key, const int value) override;
+  /// inherited from FairMQDevice
+  /// handle device specific properties and forward to FairMQDevice::GetProperty
+  int GetProperty(const int key, const int default_ = 0) override;
 
   /////////////////////////////////////////////////////////////////
   // device property identifier
@@ -82,7 +100,6 @@ private:
   unsigned char* createMessageBuffer(unsigned size);
 
   Component* mComponent;     // component instance
-  std::vector<char*> mArgv;       // array of arguments for the component
   std::vector<std::unique_ptr<FairMQMessage>> mMessages; // array of output messages
 
   int mPollingPeriod;        // period of polling on input sockets in ms

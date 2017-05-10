@@ -1,8 +1,8 @@
 //****************************************************************************
 //* This file is free software: you can redistribute it and/or modify        *
 //* it under the terms of the GNU General Public License as published by     *
-//* the Free Software Foundation, either version 3 of the License, or	     *
-//* (at your option) any later version.					     *
+//* the Free Software Foundation, either version 3 of the License, or        *
+//* (at your option) any later version.                                      *
 //*                                                                          *
 //* Primary Authors: Matthias Richter <richterm@scieq.net>                   *
 //*                                                                          *
@@ -17,8 +17,10 @@
 
 #include "aliceHLTwrapper/WrapperDevice.h"
 #include "aliceHLTwrapper/Component.h"
-#include "FairMQLogger.h"
-#include "FairMQPoller.h"
+#include <FairMQLogger.h>
+#include <FairMQPoller.h>
+#include <options/FairProgOptions.h>
+#include <options/FairMQProgOptions.h>
 
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
@@ -33,21 +35,11 @@ using std::vector;
 using std::unique_ptr;
 using namespace ALICE::HLT;
 
-// the chrono lib needs C++11
-#if __cplusplus < 201103L
-#warning statistics measurement for WrapperDevice disabled: need C++11 standard
-#else
-#define USE_CHRONO
-#endif
-#ifdef USE_CHRONO
-#include <chrono>
 using std::chrono::system_clock;
-typedef std::chrono::milliseconds TimeScale;
-#endif // USE_CHRONO
+using TimeScale = std::chrono::milliseconds;
 
-WrapperDevice::WrapperDevice(int argc, char** argv, int verbosity)
-  : mComponent(NULL)
-  , mArgv()
+WrapperDevice::WrapperDevice(int verbosity)
+  : mComponent(nullptr)
   , mMessages()
   , mPollingPeriod(10)
   , mSkipProcessing(0)
@@ -60,11 +52,26 @@ WrapperDevice::WrapperDevice(int argc, char** argv, int verbosity)
   , mNSamples(-1)
   , mVerbosity(verbosity)
 {
-  mArgv.insert(mArgv.end(), argv, argv+argc);
 }
 
 WrapperDevice::~WrapperDevice()
+= default;
+
+constexpr const char* WrapperDevice::OptionKeys[];
+
+bpo::options_description WrapperDevice::GetOptionsDescription()
 {
+  // assemble the options for the device class and component
+  bpo::options_description od("WrapperDevice options");
+  od.add_options()
+    (OptionKeys[OptionKeyPollPeriod],
+     bpo::value<int>()->default_value(10),
+     "polling period")
+    ((std::string(OptionKeys[OptionKeyDryRun]) + ",n").c_str(),
+     bpo::value<bool>()->zero_tokens()->default_value(false),
+     "skip component processing");
+  od.add(Component::GetOptionsDescription());
+  return od;
 }
 
 void WrapperDevice::Init()
@@ -76,18 +83,57 @@ void WrapperDevice::InitTask()
   /// inherited from FairMQDevice
 
   int iResult=0;
+
   std::unique_ptr<Component> component(new ALICE::HLT::Component);
   if (!component.get()) return /*-ENOMEM*/;
 
+  // loop over program options, check if the option was used and
+  // add it together with the parameter to the argument vector.
+  // would have been easier to iterate over the individual
+  // option_description entires, but options_description does not
+  // provide such a functionality
+  vector<std::string> argstrings;
+  bpo::options_description componentOptionDescriptions = Component::GetOptionsDescription();
+  const auto * config = GetConfig();
+  if (config) {
+    const auto varmap = config->GetVarMap();
+    for (const auto varit : varmap) {
+      // check if this key belongs to the options of the device
+      const auto * description = componentOptionDescriptions.find_nothrow(varit.first, false);
+      if (description && varmap.count(varit.first) && !varit.second.defaulted()) {
+        argstrings.emplace_back("--");
+        argstrings.back() += varit.first;
+        // check the semantics of the value
+        auto semantic = description->semantic();
+        if (semantic) {
+          // the value semantics allows different properties like
+          // multitoken, zero_token and composing
+          // currently only the simple case is supported
+          assert(semantic->min_tokens() <= 1);
+          assert(semantic->max_tokens() && semantic->min_tokens());
+          if (semantic->min_tokens() > 0 ) {
+            // add the token
+            argstrings.push_back(varit.second.as<std::string>());
+          }
+        }
+      }
+    }
+    mPollingPeriod = config->GetValue<int>(OptionKeys[OptionKeyPollPeriod]);
+    mSkipProcessing = config->GetValue<bool>(OptionKeys[OptionKeyDryRun]);
+  }
+
+  // TODO: probably one can get rid of this option, the instance/device
+  // id is now specified with the --id option of FairMQProgOptions
   string idkey="--instance-id";
   string id="";
   id=GetProperty(FairMQDevice::Id, id);
   vector<char*> argv;
-  argv.push_back(mArgv[0]);
   argv.push_back(&idkey[0]);
   argv.push_back(&id[0]);
-  if (mArgv.size()>1)
-    argv.insert(argv.end(), mArgv.begin()+1, mArgv.end());
+  for (auto& argstringiter : argstrings) {
+    argv.push_back(&argstringiter[0]);
+  }
+
   if ((iResult=component->init(argv.size(), &argv[0]))<0) {
     LOG(ERROR) << "component init failed with error code " << iResult;
     throw std::runtime_error("component init failed");
@@ -109,9 +155,7 @@ void WrapperDevice::Run()
   /// inherited from FairMQDevice
   int iResult=0;
 
-#ifdef USE_CHRONO
   static system_clock::time_point refTime = system_clock::now();
-#endif // USE_CHRONO
 
   unique_ptr<FairMQPoller> poller(fTransportFactory->CreatePoller(fChannels["data-in"]));
 
@@ -163,7 +207,7 @@ void WrapperDevice::Run()
     //   LOG(INFO) << "------ recieved complete Msg from " << numInputs << " input(s) after " << nReadCycles << " read cycles" ;
     // }
     nReadCycles=0;
-#ifdef USE_CHRONO
+
     auto duration = std::chrono::duration_cast<TimeScale>(std::chrono::system_clock::now() - refTime);
 
     if (mLastSampleTime>=0) {
@@ -174,7 +218,7 @@ void WrapperDevice::Run()
         mMaxTimeBetweenSample=sampleTimeDiff;
     }
     mLastSampleTime=duration.count();
-    if (duration.count()-mLastCalcTime>fLogIntervalInMs) {
+    if (duration.count()-mLastCalcTime>1000) {
       LOG(INFO) << "------ processed  " << mNSamples << " sample(s) - total " 
                 << mComponent->getEventCount() << " sample(s)";
       if (mNSamples > 0) {
@@ -190,15 +234,14 @@ void WrapperDevice::Run()
       mMaxReadCycles=-1;
       mLastCalcTime=duration.count();
     }
-#endif //USE_CHRONO
 
     if (!mSkipProcessing) {
       // prepare input from messages
-      vector<AliceO2::AliceHLT::MessageFormat::BufferDesc_t> dataArray;
+      vector<o2::AliceHLT::MessageFormat::BufferDesc_t> dataArray;
       for (vector<unique_ptr<FairMQMessage>>::iterator msg=inputMessages.begin();
            msg!=inputMessages.end(); msg++) {
         void* buffer=(*msg)->GetData();
-        dataArray.push_back(AliceO2::AliceHLT::MessageFormat::BufferDesc_t(reinterpret_cast<unsigned char*>(buffer), (*msg)->GetSize()));
+        dataArray.emplace_back(reinterpret_cast<unsigned char*>(buffer), (*msg)->GetSize());
       }
 
       // create a signal with the callback to the buffer allocation, the component
