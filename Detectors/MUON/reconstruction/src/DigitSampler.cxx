@@ -130,34 +130,19 @@ bool DigitSampler::ConditionalRun( void )
     auto dataSize = fRawReader->GetDataSize(); // in bytes
 
     // allocate a buffer with proper size
-    unsigned char* buffer = nullptr;
-    try {
-
-      buffer = new unsigned char[dataSize];
-
-    } catch (const std::bad_alloc&) {
-
-      LOG(ERROR) << "Could not allocate buffer space. Cannot decode DDL";
-      continue;
-
-    }
+    // unsigned char* buffer = nullptr;
+    std::vector<unsigned char> buffer(dataSize);
 
     // read
-    if( !fRawReader->ReadNext( buffer, dataSize ) )
-    {
-
-      delete[] buffer;
-      continue;
-
-    }
+    if( !fRawReader->ReadNext( &buffer[0], dataSize ) )
+    { continue; }
 
     // create digit array
     fDigits.clear();
 
     // increment ddl decode buffer to fill digits
     ++ddl;
-    bool decode = fRawDecoder.Decode( buffer, dataSize );
-    delete[] buffer;
+    bool decode = fRawDecoder.Decode( &buffer[0], dataSize );
 
     // do nothing if no digits
     if( fDigits.empty() ) continue;
@@ -168,10 +153,7 @@ bool DigitSampler::ConditionalRun( void )
     // create message and send
     int size = 0;
     for( auto&& digit:fDigits)
-    {
-      // LOG(INFO) << "Sending " << digit << " for DDL" << ddl;
-      size+=digit.Size();
-    }
+    { size+=digit.Size(); }
 
     auto msgBuffer = Serialize( fDigits );
 
