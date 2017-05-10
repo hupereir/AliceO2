@@ -15,5 +15,4 @@
 
 # Libraries
 add_subdirectory(base)
-add_subdirectory(hltwrapper)
 add_subdirectory(reconstruction)
